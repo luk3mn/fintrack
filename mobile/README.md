@@ -1,56 +1,425 @@
-# Welcome to your Expo app 👋
+<div align="center">
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# 💸 FinTrack
 
-## Get started
+**All your accounts, spending and investments in a single app.**
 
-1. Install dependencies
+A mobile app to track balances, income, expenses and net worth, powered by real banking data through Open Finance.
 
-   ```bash
-   npm install
-   ```
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![Pluggy](https://img.shields.io/badge/Pluggy-Open_Finance-6C47FF?style=for-the-badge)
 
-2. Start the app
+</div>
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 📖 Table of Contents
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Overview](#-overview)
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Data Model](#-data-model)
+- [Design Decisions](#-design-decisions)
+- [Security](#-security)
+- [Built to Scale](#-built-to-scale)
+- [Getting Started](#-getting-started)
+- [Roadmap](#-roadmap)
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🎯 Overview
 
-When you're ready, run:
+FinTrack aggregates data from multiple financial institutions using the [Pluggy API](https://pluggy.ai) and delivers a single view of:
 
-```bash
-npm run reset-project
+- **Up-to-date balances** across all accounts
+- **Categorized income and expenses**
+- **Investments** across different banks, with allocation and returns
+- **Net worth** over time
+
+The project started as a personal tool with zero infrastructure cost, but it was designed from day one to become multi-user without a rewrite.
+
+---
+
+## ✨ Features
+
+### Core
+
+| Module | What it delivers |
+| --- | --- |
+| **Overview** | Total balance, income vs. expenses for the month, net worth (cash + investments) |
+| **Transactions** | Unified list across all accounts, filterable by account, category, period and type |
+| **Investments** | Positions by bank and asset type, returns and consolidated total |
+| **Budgets** | Per-category limits, progress bars and alerts when a threshold is reached |
+| **Accounts** | Sync status for each connection and a manual refresh button |
+
+### Planned
+
+- 🔁 Recurring expense and subscription detection
+- 💳 Credit card tracking: current spend, closing date, due date and projection
+- 📊 Month-over-month comparison by category
+- 🏷️ Manual recategorization with rules, tags and notes
+- 🔄 Transfers between own accounts flagged as neutral
+- 🥧 Consolidated investment allocation (type, bank, issuer)
+- 📈 Net worth evolution with daily snapshots
+- 📅 Fixed income maturities (30/60/90 days)
+- 🎯 Financial goals linked to accounts or investments
+- 🔮 End-of-month balance projection
+- 🔔 Notifications for large transactions, low balance and connection errors
+- 🙈 Privacy mode, biometric lock and CSV export
+
+---
+
+## 🏗️ Architecture
+
+The app **never talks to Pluggy directly**. The `clientSecret` would end up inside the app bundle, so every request goes through a thin proxy running on Cloudflare Workers.
+
+```mermaid
+flowchart LR
+    subgraph Mobile["📱 App (Expo)"]
+        UI[Screens / Expo Router]
+        TQ[TanStack Query]
+        ZS[Zustand]
+        SS[(SecureStore)]
+    end
+
+    subgraph Edge["☁️ Cloudflare Workers"]
+        PX[Proxy / Hono]
+        KV[(apiKey cache)]
+    end
+
+    subgraph Firebase["🔥 Firebase"]
+        FA[Auth]
+        FS[(Firestore)]
+    end
+
+    PL[(Pluggy API)]
+
+    UI --> TQ
+    UI --> ZS
+    TQ -->|ID token| PX
+    PX -->|verify token| FA
+    PX --> KV
+    PX -->|apiKey| PL
+    UI -->|sign in| FA
+    UI -->|budgets, rules, snapshots| FS
+    SS -.-> TQ
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+### Separation of concerns
 
-### Other setup steps
+| Layer | Responsibility | Persistence |
+| --- | --- | --- |
+| `src/api/` + `features/*/hooks` | Banking data from Pluggy through the Worker (read-only) | TanStack Query cache |
+| `features/budgets/api` | User-owned data (budgets, rules, snapshots) | Firestore |
+| `features/*/store` | UI state (filters, period, privacy mode) | Zustand |
+| `src/lib/` | Pure functions: formatting, categorization, mappers | n/a |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### Transaction flow
 
-## Learn more
+```mermaid
+flowchart LR
+    A[Pluggy] --> B[Worker]
+    B --> C[useTransactions]
+    C --> D[mappers.ts]
+    D --> E[categorize.ts]
+    F[(txOverrides)] --> E
+    G[(categoryRules)] --> E
+    E --> H[Screen]
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+The final category follows a priority order: **manual override → user rules → Pluggy category**.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 🧰 Tech Stack
 
-Join our community of developers creating universal apps.
+**App**
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo](https://expo.dev) + [Expo Router](https://docs.expo.dev/router/introduction/)
+- [NativeWind](https://www.nativewind.dev) for Tailwind-based styling
+- [TanStack Query](https://tanstack.com/query) for fetching, caching and pagination
+- [Zustand](https://zustand-demo.pmnd.rs) for UI state
+- [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) for forms and validation
+- `expo-secure-store` and `expo-local-authentication` for on-device security
+- `react-native-mmkv` for persisted cache
+- `react-native-gifted-charts` for charts
+
+**Backend**
+
+- [Cloudflare Workers](https://workers.cloudflare.com) with [Hono](https://hono.dev) as the proxy
+- Cloudflare KV for the apiKey cache
+- [Firebase Auth](https://firebase.google.com/docs/auth) for identity
+- [Cloud Firestore](https://firebase.google.com/docs/firestore) for user data
+
+**Banking integration**
+
+- [Pluggy](https://pluggy.ai) (Open Finance)
+
+---
+
+## 📁 Project Structure
+
+A single repository with two independent projects, each with its own `package.json`:
+
+```
+fintrack/
+├── mobile/
+│   ├── app/
+│   │   ├── _layout.tsx
+│   │   ├── (auth)/
+│   │   │   ├── _layout.tsx
+│   │   │   └── login.tsx
+│   │   ├── (tabs)/
+│   │   │   ├── _layout.tsx
+│   │   │   ├── index.tsx
+│   │   │   ├── transactions.tsx
+│   │   │   ├── investments.tsx
+│   │   │   ├── budgets.tsx
+│   │   │   └── accounts.tsx
+│   │   ├── transaction/[id].tsx
+│   │   └── investment/[id].tsx
+│   ├── src/
+│   │   ├── features/
+│   │   │   ├── auth/            api, hooks, schemas, screens
+│   │   │   ├── overview/        components, hooks, screens
+│   │   │   ├── transactions/    components, hooks, screens, store
+│   │   │   ├── investments/     components, hooks, screens
+│   │   │   ├── budgets/         api, components, schemas, screens
+│   │   │   ├── accounts/        components, hooks, screens
+│   │   │   └── privacy/         hooks, store
+│   │   ├── api/
+│   │   │   ├── client.ts
+│   │   │   ├── endpoints.ts
+│   │   │   ├── keys.ts
+│   │   │   └── types.ts
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   └── layout/
+│   │   ├── lib/
+│   │   │   ├── queryClient.ts
+│   │   │   ├── money.ts
+│   │   │   └── mappers.ts
+│   │   ├── types/
+│   │   │   └── domain.ts
+│   │   ├── theme/
+│   │   └── config/
+│   │       ├── env.ts
+│   │       └── firebase.ts
+│   ├── assets/
+│   ├── app.config.ts
+│   └── tailwind.config.js
+│
+├── worker/
+│   ├── src/
+│   │   ├── index.ts
+│   │   ├── auth.ts
+│   │   ├── pluggy.ts
+│   │   └── env.ts
+│   └── wrangler.toml
+│
+└── README.md
+```
+
+Routes in `app/` stay thin and only render screens exported by each feature. Everything else lives under `src/features/<feature>`.
+
+---
+
+## 🗄️ Data Model
+
+Everything in Firestore is scoped per user:
+
+```
+users/{uid}
+  ├── items/{itemId}
+  ├── budgets/{categoryId}
+  ├── categoryRules/{ruleId}
+  ├── txOverrides/{transactionId}
+  ├── snapshots/{yyyy-MM-dd}
+  └── goals/{goalId}
+```
+
+```ts
+export type Cents = number;
+
+export interface Item {
+  pluggyItemId: string;
+  connectorName: string;
+  nickname?: string;
+  createdAt: number;
+}
+
+export interface Budget {
+  categoryId: string;
+  limit: Cents;
+  alertAt: number;
+}
+
+export interface CategoryRule {
+  id: string;
+  contains: string;
+  categoryId: string;
+  priority: number;
+}
+
+export interface TxOverride {
+  categoryId?: string;
+  tags?: string[];
+  note?: string;
+  ignored?: boolean;
+  isInternalTransfer?: boolean;
+}
+
+export interface Snapshot {
+  date: string;
+  cash: Cents;
+  investments: Cents;
+  netWorth: Cents;
+  byType: Record<string, Cents>;
+  byInstitution: Record<string, Cents>;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  target: Cents;
+  linkedAccountId?: string;
+  deadline?: string;
+}
+```
+
+Firestore security rule:
+
+```
+match /users/{uid}/{document=**} {
+  allow read, write: if request.auth != null && request.auth.uid == uid;
+}
+```
+
+---
+
+## 🧠 Design Decisions
+
+| Decision | Rationale |
+| --- | --- |
+| **Money stored as integer cents** | Avoids floating-point errors. Conversion happens only at display time |
+| **Transactions are not persisted in Firestore** | Lowers cost, avoids duplicating banking data and simplifies privacy compliance. Only user-owned data (`txOverrides`) is stored |
+| **Mappers between Pluggy and the domain** | No screen knows the Pluggy format. Swapping providers touches a single layer |
+| **Categorization as a pure function** | Easy to test and predictable |
+| **Sign normalization** | Credit cards and checking accounts use different signs. Spending is always negative in the domain |
+| **Snapshots generated by the app** | Pluggy only exposes current state. The first open of the day writes a snapshot, with no extra infrastructure |
+| **`useInfiniteQuery` for transactions** | The Pluggy endpoint is paginated |
+| **Fixed proxy routes** | No generic passthrough: the Worker exposes only `/accounts`, `/transactions`, `/investments` and `/refresh` |
+
+### Synchronization
+
+Pluggy data only changes when an item is updated. The refresh button calls `PATCH /items/{id}` through the Worker and invalidates the queries when it completes. Item status (`UPDATED`, `LOGIN_ERROR`, `WAITING_USER_INPUT`) is surfaced on the accounts screen to signal when re-authentication is needed.
+
+---
+
+## 🔒 Security
+
+**Backend**
+
+- `clientId` and `clientSecret` live only as Worker secrets, never in the app
+- Firebase ID token verified on every route
+- `uid` allowlist while the app is personal-use
+- Pluggy apiKey cached and renewed before it expires
+- Per-user rate limiting
+- No logging of payloads, balances or tokens
+
+**App**
+
+- Session token stored in `expo-secure-store`
+- Encrypted persisted cache (MMKV with the key held in SecureStore)
+- Biometric lock on app open
+- Privacy mode to hide values
+- No credentials in `EXPO_PUBLIC_*` variables
+
+---
+
+## 🚀 Built to Scale
+
+Although it is a personal project, the architecture avoids decisions that would block a commercial version:
+
+- Data modeled per `uid`, with no hardcoded `itemId` in code
+- **Pluggy Connect** flow planned: the Worker issues a `connectToken` and the app opens the widget so each user can connect their own accounts
+- Firestore rules already multi-tenant
+
+Before commercializing, the following will be required:
+
+- A paid Pluggy plan and a contract with them
+- A privacy policy and terms of service
+- Explicit consent and a data deletion flow (LGPD)
+
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- A [Pluggy](https://dashboard.pluggy.ai) account with a `clientId` and `clientSecret`
+- A Firebase project with Authentication and Firestore enabled
+- A Cloudflare account
+
+### Worker
+
+```bash
+cd worker
+npm install
+npx wrangler secret put PLUGGY_CLIENT_ID
+npx wrangler secret put PLUGGY_CLIENT_SECRET
+npx wrangler secret put FIREBASE_PROJECT_ID
+npx wrangler deploy
+```
+
+### App
+
+```bash
+cd mobile
+npm install
+cp .env.example .env
+npx expo start
+```
+
+App environment variables (`.env`):
+
+```
+EXPO_PUBLIC_API_URL=https://your-worker.workers.dev
+EXPO_PUBLIC_FIREBASE_API_KEY=
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+EXPO_PUBLIC_FIREBASE_APP_ID=
+```
+
+> ⚠️ Never put `PLUGGY_CLIENT_SECRET` in the app. `EXPO_PUBLIC_*` variables are inlined into the bundle.
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Architecture and data model
+- [ ] Worker: authentication, apiKey cache and fixed routes
+- [ ] API hooks and mappers
+- [ ] Overview screen with balance and net worth
+- [ ] Transactions list with pagination and filters
+- [ ] Investments
+- [ ] Category budgets
+- [ ] Refresh and connection status
+- [ ] Snapshots and net worth evolution
+- [ ] Recurring expenses, goals and balance projection
+- [ ] Notifications, widget and CSV export
+- [ ] Pluggy Connect flow for multi-user support
+
+---
+
+<div align="center">
+
+Built with ☕ and React Native
+
+</div>
