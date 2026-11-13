@@ -5,6 +5,7 @@ import { useColorScheme } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { NativeTabs } from 'expo-router/build/native-tabs/NativeTabs.js';
 import { Colors } from '@/constants/theme';
+import '@/global.css';
 
 SplashScreen.preventAutoHideAsync();
 

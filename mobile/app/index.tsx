@@ -4,7 +4,7 @@ import { ThemedView } from '@/components/themed-view';
 
 export default function HomeScreen() {
   return (
-    <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <ThemedView className="flex-1 items-center justify-center">
       <ThemedText>Home</ThemedText>
     </ThemedView>
   );
