@@ -36,6 +36,7 @@ export function useOverview() {
   );
 
   const summary = useMemo(() => summarize(accounts), [accounts]);
+  console.log("...", accounts);
 
   return {
     accounts,

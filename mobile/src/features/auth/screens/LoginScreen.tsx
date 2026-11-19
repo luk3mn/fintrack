@@ -54,11 +54,11 @@ export function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 justify-center bg-zinc-950 px-6"
+      className="flex-1 justify-center bg-background px-6"
     >
       <View className="mb-10 gap-2">
-        <Text className="text-3xl font-bold text-zinc-50">FinTrack</Text>
-        <Text className="text-base text-zinc-400">
+        <Text className="text-3xl font-bold text-foreground">FinTrack</Text>
+        <Text className="text-base text-muted">
           Entre para ver suas finanças.
         </Text>
       </View>
@@ -101,7 +101,7 @@ export function LoginScreen() {
         />
 
         {submitError ? (
-          <Text className="text-sm text-red-400">{submitError}</Text>
+          <Text className="text-sm text-danger">{submitError}</Text>
         ) : null}
 
         <Button title="Entrar" onPress={onSubmit} loading={isSubmitting} />

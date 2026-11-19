@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text } from "react-native";
+import { useThemeColors } from "@/theme/tokens";
 
 type Variant = "primary" | "secondary";
 
@@ -11,13 +12,13 @@ type Props = {
 };
 
 const containers: Record<Variant, string> = {
-  primary: "bg-emerald-500",
-  secondary: "bg-zinc-800",
+  primary: "bg-primary",
+  secondary: "border border-border bg-card",
 };
 
 const labels: Record<Variant, string> = {
-  primary: "text-emerald-950",
-  secondary: "text-zinc-100",
+  primary: "text-primary-foreground",
+  secondary: "text-foreground",
 };
 
 export function Button({
@@ -27,6 +28,7 @@ export function Button({
   loading = false,
   disabled = false,
 }: Props) {
+  const colors = useThemeColors();
   const inactive = loading || disabled;
 
   return (
@@ -37,7 +39,7 @@ export function Button({
       className={`h-12 items-center justify-center rounded-xl active:opacity-80 ${containers[variant]} ${inactive ? "opacity-50" : ""}`}
     >
       {loading ? (
-        <ActivityIndicator color="#a1a1aa" />
+        <ActivityIndicator color={colors.muted} />
       ) : (
         <Text className={`text-base font-semibold ${labels[variant]}`}>
           {title}

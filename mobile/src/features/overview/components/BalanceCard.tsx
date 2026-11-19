@@ -15,9 +15,9 @@ type LineProps = {
 function Line({ label, value, negative = false }: LineProps) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="text-sm text-zinc-400">{label}</Text>
+      <Text className="text-sm text-muted">{label}</Text>
       <Text
-        className={`text-sm font-semibold ${negative ? "text-red-400" : "text-zinc-100"}`}
+        className={`text-sm font-semibold ${negative ? "text-danger" : "text-foreground"}`}
       >
         {value}
       </Text>
@@ -27,15 +27,15 @@ function Line({ label, value, negative = false }: LineProps) {
 
 export function BalanceCard({ summary }: Props) {
   return (
-    <View className="gap-4 rounded-2xl bg-zinc-900 p-5">
+    <View className="gap-4 rounded-2xl border border-border bg-card p-5">
       <View className="gap-1">
-        <Text className="text-sm text-zinc-400">Saldo em contas</Text>
-        <Text className="text-4xl font-bold text-zinc-50">
+        <Text className="text-sm text-muted">Saldo em contas</Text>
+        <Text className="text-4xl font-bold text-foreground">
           {formatBRL(summary.cash)}
         </Text>
       </View>
 
-      <View className="gap-2 border-t border-zinc-800 pt-4">
+      <View className="gap-2 border-t border-border pt-4">
         <Line
           label="Faturas de cartão"
           value={formatBRL(-summary.cardBills)}

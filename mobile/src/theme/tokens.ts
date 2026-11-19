@@ -1,8 +1,101 @@
-export const colors = {
-  background: "#09090b",
-  card: "#18181b",
-  border: "#27272a",
-  foreground: "#fafafa",
-  muted: "#a1a1aa",
-  accent: "#10b981",
-};
+import { useColorScheme } from "react-native";
+
+export const palettes = {
+  spaceIndigo: {
+    50: "#efeff6",
+    100: "#dfdfec",
+    200: "#bebeda",
+    300: "#9e9ec7",
+    400: "#7d7db5",
+    500: "#5d5da2",
+    600: "#4a4a82",
+    700: "#383861",
+    800: "#252541",
+    900: "#131320",
+    950: "#0d0d17",
+  },
+  dustyGrape: {
+    50: "#f0f1f4",
+    100: "#e1e2ea",
+    200: "#c3c6d5",
+    300: "#a5a9c0",
+    400: "#888caa",
+    500: "#6a7095",
+    600: "#555977",
+    700: "#3f435a",
+    800: "#2a2d3c",
+    900: "#15161e",
+    950: "#0f1015",
+  },
+  lilacAsh: {
+    50: "#f3f1f3",
+    100: "#e7e4e7",
+    200: "#cfc9ce",
+    300: "#b7aeb6",
+    400: "#9f939d",
+    500: "#877885",
+    600: "#6c606a",
+    700: "#514850",
+    800: "#363035",
+    900: "#1b181b",
+    950: "#131113",
+  },
+  almondSilk: {
+    50: "#f5f0ef",
+    100: "#ece2df",
+    200: "#d8c4c0",
+    300: "#c5a7a0",
+    400: "#b18981",
+    500: "#9e6c61",
+    600: "#7e564e",
+    700: "#5f413a",
+    800: "#3f2b27",
+    900: "#201613",
+    950: "#160f0e",
+  },
+  parchment: {
+    50: "#f7f1ee",
+    100: "#eee3dd",
+    200: "#dec7ba",
+    300: "#cdaa98",
+    400: "#bd8e75",
+    500: "#ac7253",
+    600: "#8a5b42",
+    700: "#674432",
+    800: "#452e21",
+    900: "#221711",
+    950: "#18100c",
+  },
+} as const;
+
+export const themes = {
+  light: {
+    background: "#ffffff",
+    card: palettes.dustyGrape[50],
+    border: palettes.spaceIndigo[100],
+    foreground: palettes.spaceIndigo[950],
+    muted: palettes.dustyGrape[600],
+    primary: palettes.spaceIndigo[600],
+    primaryForeground: "#ffffff",
+    accent: palettes.spaceIndigo[600],
+    danger: palettes.almondSilk[600],
+  },
+  dark: {
+    background: palettes.spaceIndigo[950],
+    card: palettes.spaceIndigo[900],
+    border: palettes.spaceIndigo[800],
+    foreground: palettes.spaceIndigo[50],
+    muted: palettes.spaceIndigo[300],
+    primary: palettes.spaceIndigo[500],
+    primaryForeground: "#ffffff",
+    accent: palettes.spaceIndigo[300],
+    danger: palettes.almondSilk[300],
+  },
+} as const;
+
+export type ThemeColors = (typeof themes)[keyof typeof themes];
+
+export function useThemeColors(): ThemeColors {
+  const scheme = useColorScheme();
+  return scheme === "dark" ? themes.dark : themes.light;
+}

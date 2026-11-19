@@ -16,17 +16,17 @@ const KIND_LABELS = {
 export function AccountRow({ account, divider }: Props) {
   return (
     <View
-      className={`flex-row items-center justify-between px-4 py-3.5 ${divider ? "border-t border-zinc-800" : ""}`}
+      className={`flex-row items-center justify-between px-4 py-3.5 ${divider ? "border-t border-border" : ""}`}
     >
       <View className="flex-1 pr-4">
-        <Text numberOfLines={1} className="text-base text-zinc-100">
+        <Text numberOfLines={1} className="text-base text-foreground">
           {account.institution}
         </Text>
-        <Text className="text-sm text-zinc-500">{KIND_LABELS[account.kind]}</Text>
+        <Text className="text-sm text-muted">{KIND_LABELS[account.kind]}</Text>
       </View>
 
       <Text
-        className={`text-base font-semibold ${account.kind === "credit" ? "text-red-400" : "text-zinc-50"}`}
+        className={`text-base font-semibold ${account.kind === "credit" ? "text-danger" : "text-foreground"}`}
       >
         {formatBRL(account.balance)}
       </Text>

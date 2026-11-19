@@ -1,26 +1,28 @@
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { signOut } from "@/features/auth/api/auth";
+import { useThemeColors } from "@/theme/tokens";
 import { AccountRow } from "../components/AccountRow";
 import { BalanceCard } from "../components/BalanceCard";
 import { useOverview } from "../hooks/useOverview";
 
 export function OverviewScreen() {
+  const colors = useThemeColors();
   const { accounts, summary, isLoading, isError, isRefetching, refetch } =
     useOverview();
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-zinc-950">
-        <ActivityIndicator color="#a1a1aa" />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator color={colors.muted} />
       </View>
     );
   }
 
   if (isError) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-zinc-950 px-6">
-        <Text className="text-center text-base text-zinc-300">
+      <View className="flex-1 items-center justify-center gap-4 bg-background px-6">
+        <Text className="text-center text-base text-muted">
           Não foi possível carregar suas contas.
         </Text>
         <View className="w-full">
@@ -32,14 +34,14 @@ export function OverviewScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-zinc-950"
+      className="flex-1 bg-background"
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
           onRefresh={() => {
             void refetch();
           }}
-          tintColor="#a1a1aa"
+          tintColor={colors.muted}
         />
       }
     >
@@ -47,10 +49,10 @@ export function OverviewScreen() {
         <BalanceCard summary={summary} />
 
         <View className="gap-2">
-          <Text className="text-sm font-medium uppercase tracking-wide text-zinc-400">
+          <Text className="text-sm font-medium uppercase tracking-wide text-muted">
             Contas
           </Text>
-          <View className="overflow-hidden rounded-2xl bg-zinc-900">
+          <View className="overflow-hidden rounded-2xl border border-border bg-card">
             {accounts.map((account, index) => (
               <AccountRow
                 key={account.id}

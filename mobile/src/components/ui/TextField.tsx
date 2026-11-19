@@ -1,4 +1,5 @@
 import { Text, TextInput, View, type TextInputProps } from "react-native";
+import { useThemeColors } from "@/theme/tokens";
 
 type Props = TextInputProps & {
   label: string;
@@ -6,15 +7,17 @@ type Props = TextInputProps & {
 };
 
 export function TextField({ label, error, ...props }: Props) {
+  const colors = useThemeColors();
+
   return (
     <View className="gap-1.5">
-      <Text className="text-sm font-medium text-zinc-300">{label}</Text>
+      <Text className="text-sm font-medium text-muted">{label}</Text>
       <TextInput
-        placeholderTextColor="#71717a"
-        className={`h-12 rounded-xl border bg-zinc-900 px-4 text-base text-zinc-50 ${error ? "border-red-500" : "border-zinc-800"}`}
+        placeholderTextColor={colors.muted}
+        className={`h-12 rounded-xl border bg-card px-4 text-base text-foreground ${error ? "border-danger" : "border-border"}`}
         {...props}
       />
-      {error ? <Text className="text-sm text-red-400">{error}</Text> : null}
+      {error ? <Text className="text-sm text-danger">{error}</Text> : null}
     </View>
   );
 }
