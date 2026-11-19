@@ -79,6 +79,7 @@ export const themes = {
     primaryForeground: "#ffffff",
     accent: palettes.spaceIndigo[600],
     danger: palettes.almondSilk[600],
+    subtle: palettes.parchment[600],
   },
   dark: {
     background: palettes.spaceIndigo[950],
@@ -90,6 +91,7 @@ export const themes = {
     primaryForeground: "#ffffff",
     accent: palettes.spaceIndigo[300],
     danger: palettes.almondSilk[300],
+    subtle: palettes.dustyGrape[500],
   },
 } as const;
 

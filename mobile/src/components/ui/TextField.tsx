@@ -11,10 +11,10 @@ export function TextField({ label, error, ...props }: Props) {
 
   return (
     <View className="gap-1.5">
-      <Text className="text-sm font-medium text-muted">{label}</Text>
+      <Text className="text-xs font-medium text-muted">{label}</Text>
       <TextInput
         placeholderTextColor={colors.muted}
-        className={`h-12 rounded-xl border bg-card px-4 text-base text-foreground ${error ? "border-danger" : "border-border"}`}
+        className={`h-[52px] rounded-[14px] bg-card px-4 text-[14px] text-foreground ${error ? "border border-danger" : ""}`}
         {...props}
       />
       {error ? <Text className="text-sm text-danger">{error}</Text> : null}

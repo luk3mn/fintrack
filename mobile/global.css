@@ -77,6 +77,7 @@
   --app-primary-foreground: #ffffff;
   --app-accent: #4a4a82;
   --app-danger: #7e564e;
+  --app-subtle: #8a5b42;
 }
 
 /* Dark mode: darkest space-indigo as the background. */
@@ -91,6 +92,7 @@
     --app-primary-foreground: #ffffff;
     --app-accent: #9e9ec7;
     --app-danger: #c5a7a0;
+    --app-subtle: #6a7095;
   }
 }
 
@@ -104,4 +106,5 @@
   --color-primary-foreground: var(--app-primary-foreground);
   --color-accent: var(--app-accent);
   --color-danger: var(--app-danger);
+  --color-subtle: var(--app-subtle);
 }
