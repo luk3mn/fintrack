@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { InstitutionLogo } from "@/components/ui/InstitutionLogo";
 import { formatBRL } from "@/lib/money";
 import type { Account } from "@/types/domain";
 
@@ -36,22 +37,30 @@ export function AccountListRow({ account }: Props) {
     : KIND_LABELS[account.kind];
 
   return (
-    <View className="pb-[17px] pt-[10px]">
-      <View className="flex-row items-center justify-between gap-3">
-        <Text
-          numberOfLines={1}
-          className="flex-1 text-xs font-medium leading-[15px] text-foreground"
-        >
-          {accountTitle(account)}
-        </Text>
-        <Text className="text-xs font-medium leading-[15px] text-foreground">
-          {formatBRL(balance)}
+    <View className="flex-row items-center gap-3 pb-[17px] pt-[10px]">
+      <InstitutionLogo
+        institution={account.institution}
+        name={account.institution}
+        size={28}
+      />
+
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between gap-3">
+          <Text
+            numberOfLines={1}
+            className="flex-1 text-xs font-medium leading-[15px] text-foreground"
+          >
+            {accountTitle(account)}
+          </Text>
+          <Text className="text-xs font-medium leading-[15px] text-foreground">
+            {formatBRL(balance)}
+          </Text>
+        </View>
+
+        <Text className="pt-2 text-[10px] leading-[12px] text-soft">
+          {subtitle}
         </Text>
       </View>
-
-      <Text className="pt-2 text-[10px] leading-[12px] text-soft">
-        {subtitle}
-      </Text>
     </View>
   );
 }

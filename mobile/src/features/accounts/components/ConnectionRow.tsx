@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
+import { InstitutionLogo } from "@/components/ui/InstitutionLogo";
 import { connectionUpdatedLabel } from "@/lib/dates";
 import type { Connection } from "@/types/domain";
-import { InstitutionLogo } from "./InstitutionLogo";
 
 type Props = {
   connection: Connection;
@@ -40,6 +40,7 @@ export function ConnectionRow({ connection, first }: Props) {
         institution={connection.institution}
         name={name}
         first={first}
+        size={38}
       />
 
       <View className="flex-1 pl-3">
