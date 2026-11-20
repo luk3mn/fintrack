@@ -13,11 +13,11 @@ export function SectionHeader({
 }: Props) {
   return (
     <View className="flex-row items-end justify-between px-1">
-      <Text className="text-[17px] font-semibold text-foreground">{title}</Text>
+      <Text className="text-lg font-semibold text-foreground">{title}</Text>
       {action ? (
         <Text
-          className={`text-[10px] text-accent ${
-            actionCaps ? "font-medium uppercase tracking-[0.5px]" : "font-normal"
+          className={`text-xs text-accent ${
+            actionCaps ? "font-medium uppercase tracking-wide" : "font-normal"
           }`}
         >
           {action}  ↗

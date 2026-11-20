@@ -35,7 +35,7 @@ export function ConnectionRow({ connection, first }: Props) {
       : "text-accent";
 
   return (
-    <View className="flex-row items-center py-[10px]">
+    <View className="flex-row items-center py-2.5">
       <InstitutionLogo
         institution={connection.institution}
         name={name}
@@ -46,13 +46,13 @@ export function ConnectionRow({ connection, first }: Props) {
       <View className="flex-1 pl-3">
         <Text
           numberOfLines={1}
-          className="text-[13px] font-medium leading-[16px] text-foreground"
+          className="text-sm font-medium leading-4 text-foreground"
         >
           {name}
         </Text>
         <Text
           numberOfLines={1}
-          className={`pt-1 text-[10px] leading-[12px] ${
+          className={`pt-1 text-xs leading-3 ${
             needsAttention ? "text-warm" : "text-soft"
           }`}
         >
@@ -61,7 +61,7 @@ export function ConnectionRow({ connection, first }: Props) {
       </View>
 
       <Text
-        className={`pl-3 pr-5 text-[14px] leading-[17px] ${markColor}`}
+        className={`pl-3 pr-5 text-sm leading-4 ${markColor}`}
       >
         {mark}
       </Text>

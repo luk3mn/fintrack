@@ -83,7 +83,7 @@ export function LoginScreen() {
       className="flex-1 bg-background"
     >
       <View style={{ paddingTop: insets.top + 16 }} className="px-5">
-        <Text className="text-[23px] font-semibold text-foreground">
+        <Text className="text-2xl font-semibold text-foreground">
           FinTrack
         </Text>
       </View>
@@ -99,13 +99,13 @@ export function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="items-center">
-          <View className="h-[88px] w-[88px] items-center justify-center rounded-[28px] bg-card">
+          <View className="h-22 w-22 items-center justify-center rounded-3xl bg-card">
             <SparkleIcon color={colors.accent} />
           </View>
         </View>
 
-        <View className="pl-[22px] pt-10">
-          <Text className="text-[22px] font-semibold leading-7 text-foreground">
+        <View className="pl-5 pt-10">
+          <Text className="text-2xl font-semibold leading-7 text-foreground">
             Seu dinheiro, protegido.
           </Text>
           <Text className="pt-2 text-xs text-muted">
@@ -161,19 +161,19 @@ export function LoginScreen() {
             onPress={() => {
               void onSubmit();
             }}
-            className={`mt-2 h-[50px] items-center justify-center rounded-[14px] bg-accent active:opacity-80 ${isSubmitting ? "opacity-50" : ""}`}
+            className={`mt-2 h-13 items-center justify-center rounded-xl bg-accent active:opacity-80 ${isSubmitting ? "opacity-50" : ""}`}
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.foreground} />
             ) : (
-              <Text className="text-[13px] font-semibold text-foreground">
+              <Text className="text-sm font-semibold text-foreground">
                 Entrar
               </Text>
             )}
           </Pressable>
         </View>
 
-        <Text className="pt-8 text-center text-[10px] text-subtle">
+        <Text className="pt-8 text-center text-xs text-subtle">
           Acesso protegido com criptografia e biometria
         </Text>
       </ScrollView>

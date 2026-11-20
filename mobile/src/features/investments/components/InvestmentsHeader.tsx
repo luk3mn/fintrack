@@ -13,8 +13,8 @@ export function InvestmentsHeader({ lastSync, loading = false }: Props) {
         Investimentos
       </Text>
 
-      <View className="h-[25px] w-[126px] items-center justify-center rounded-xl bg-card">
-        <Text className="text-[10px] text-soft">
+      <View className="h-6 w-36 items-center justify-center rounded-xl bg-card">
+        <Text className="text-xs text-soft">
           {loading ? "Sincronizando…" : relativeSyncLabel(lastSync)}
         </Text>
       </View>

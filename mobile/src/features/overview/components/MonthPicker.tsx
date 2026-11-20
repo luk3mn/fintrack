@@ -21,7 +21,7 @@ export function MonthPicker({
 
   return (
     <View className="flex-row items-center px-1">
-      <Text className="text-[11px] font-medium uppercase tracking-[0.6px] text-soft">
+      <Text className="text-xs font-medium uppercase tracking-wide text-soft">
         {label}
       </Text>
 

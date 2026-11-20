@@ -30,7 +30,7 @@ export function FilterTabs({ value, onChange }: Props) {
             }`}
           >
             <Text
-              className={`text-[10px] ${
+              className={`text-xs ${
                 active ? "font-medium text-primary-foreground" : "text-soft"
               }`}
             >

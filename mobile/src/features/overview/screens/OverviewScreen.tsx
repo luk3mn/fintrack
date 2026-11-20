@@ -181,7 +181,7 @@ export function OverviewScreen() {
           className="mt-8 flex-row items-center justify-center gap-2 py-3 active:opacity-60"
         >
           <Ionicons name="log-out-outline" size={14} color={colors.subtle} />
-          <Text className="text-[11px] text-subtle">Sair da conta</Text>
+          <Text className="text-xs text-subtle">Sair da conta</Text>
         </Pressable>
       </View>
     </ScrollView>

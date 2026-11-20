@@ -26,10 +26,10 @@ export function CashFlowChart({
   if (max === 0) {
     return (
       <View
-        className="items-center justify-center rounded-[16px] bg-card"
+        className="items-center justify-center rounded-2xl bg-card"
         style={{ height: 101 }}
       >
-        <Text className="text-[11px] text-subtle">
+        <Text className="text-xs text-subtle">
           Sem gastos neste mês.
         </Text>
       </View>
@@ -43,7 +43,7 @@ export function CashFlowChart({
 
   return (
     <View
-      className="rounded-[16px] bg-card px-4 pb-1 pt-2"
+      className="rounded-2xl bg-card px-4 pb-1 pt-2"
       style={{ height: 101 }}
     >
       <View className="flex-1 flex-row items-end justify-between">
@@ -62,9 +62,9 @@ export function CashFlowChart({
       </View>
 
       <View className="flex-row items-center justify-between pt-1">
-        <Text className="text-[9px] text-subtle">{startLabel}</Text>
-        <Text className="text-[9px] text-subtle">{middleLabel}</Text>
-        <Text className="text-[9px] text-subtle">{endLabel}</Text>
+        <Text className="text-xs text-subtle">{startLabel}</Text>
+        <Text className="text-xs text-subtle">{middleLabel}</Text>
+        <Text className="text-xs text-subtle">{endLabel}</Text>
       </View>
     </View>
   );

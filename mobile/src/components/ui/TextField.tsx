@@ -14,7 +14,7 @@ export function TextField({ label, error, ...props }: Props) {
       <Text className="text-xs font-medium text-muted">{label}</Text>
       <TextInput
         placeholderTextColor={colors.muted}
-        className={`h-[52px] rounded-[14px] bg-card px-4 text-[14px] text-foreground ${error ? "border border-danger" : ""}`}
+        className={`h-13 rounded-xl bg-card px-4 text-sm text-foreground ${error ? "border border-danger" : ""}`}
         {...props}
       />
       {error ? <Text className="text-sm text-danger">{error}</Text> : null}

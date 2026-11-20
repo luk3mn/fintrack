@@ -37,7 +37,7 @@ export function AccountListRow({ account }: Props) {
     : KIND_LABELS[account.kind];
 
   return (
-    <View className="flex-row items-center gap-3 pb-[17px] pt-[10px]">
+    <View className="flex-row items-center gap-3 pb-4 pt-2.5">
       <InstitutionLogo
         institution={account.institution}
         name={account.institution}
@@ -48,16 +48,16 @@ export function AccountListRow({ account }: Props) {
         <View className="flex-row items-center justify-between gap-3">
           <Text
             numberOfLines={1}
-            className="flex-1 text-xs font-medium leading-[15px] text-foreground"
+            className="flex-1 text-xs font-medium leading-4 text-foreground"
           >
             {accountTitle(account)}
           </Text>
-          <Text className="text-xs font-medium leading-[15px] text-foreground">
+          <Text className="text-xs font-medium leading-4 text-foreground">
             {formatBRL(balance)}
           </Text>
         </View>
 
-        <Text className="pt-2 text-[10px] leading-[12px] text-soft">
+        <Text className="pt-2 text-xs leading-3 text-soft">
           {subtitle}
         </Text>
       </View>

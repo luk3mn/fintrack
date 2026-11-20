@@ -25,7 +25,7 @@ export function InvestmentListRow({ investment }: Props) {
     : formatBRL(investment.balance);
 
   return (
-    <View className="flex-row items-center gap-3 pb-[17px] pt-[10px]">
+    <View className="flex-row items-center gap-3 pb-4 pt-2.5">
       <InstitutionLogo
         institution={investment.institution ?? investment.issuer}
         name={subtitle}
@@ -36,13 +36,13 @@ export function InvestmentListRow({ investment }: Props) {
         <View className="flex-row items-start justify-between gap-3">
           <Text
             numberOfLines={1}
-            className="flex-1 text-xs font-medium leading-[15px] text-foreground"
+            className="flex-1 text-xs font-medium leading-4 text-foreground"
           >
             {investment.name}
           </Text>
 
           <Text
-            className={`text-[11px] font-medium leading-[15px] ${
+            className={`text-xs font-medium leading-4 ${
               showProfit ? "text-accent" : "text-foreground"
             }`}
           >
@@ -52,7 +52,7 @@ export function InvestmentListRow({ investment }: Props) {
 
         <Text
           numberOfLines={1}
-          className="pt-1 text-[10px] leading-[12px] text-soft"
+          className="pt-1 text-xs leading-3 text-soft"
         >
           {subtitle}
         </Text>

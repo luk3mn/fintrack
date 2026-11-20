@@ -26,15 +26,15 @@ export function MaturitySection({ summary }: Props) {
           {maturities.map((maturity) => (
             <View
               key={maturity.id}
-              className="min-h-[52px] flex-1 rounded-[14px] bg-card px-4 py-2"
+              className="min-h-13 flex-1 rounded-xl bg-card px-4 py-2"
             >
               <Text
                 numberOfLines={1}
-                className="text-[9px] leading-[12px] text-soft"
+                className="text-xs leading-3 text-soft"
               >
                 {maturity.dateLabel} · {shortInvestmentName(maturity.name)}
               </Text>
-              <Text className="pt-1 text-xs font-medium leading-[15px] text-foreground">
+              <Text className="pt-1 text-xs font-medium leading-4 text-foreground">
                 {formatBRL(maturity.balance)}
               </Text>
             </View>

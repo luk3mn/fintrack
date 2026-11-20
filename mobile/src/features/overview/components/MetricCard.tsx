@@ -26,19 +26,19 @@ export function MetricCard({
         : "text-warm";
 
   return (
-    <View className="flex-1 rounded-[16px] bg-card px-[11px] pb-2 pt-3">
-      <Text className="text-[10px] text-soft">{label}</Text>
+    <View className="flex-1 rounded-2xl bg-card px-3 pb-2 pt-3">
+      <Text className="text-xs text-soft">{label}</Text>
 
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
-        className="pt-2 text-[14px] font-semibold text-hero-foreground"
+        className="pt-2 text-sm font-semibold text-hero-foreground"
       >
         {value}
       </Text>
 
-      <Text className={`pt-1.5 text-[10px] ${deltaClass}`}>
+      <Text className={`pt-1.5 text-xs ${deltaClass}`}>
         {delta === undefined ? "—" : deltaLabel(delta, deltaSuffix)}
       </Text>
     </View>

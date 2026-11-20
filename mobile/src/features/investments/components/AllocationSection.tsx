@@ -22,20 +22,20 @@ export function AllocationSection({ summary }: Props) {
       <SectionTitle title="Alocação" />
 
       <View className="flex-row items-center pt-4">
-        <View className="h-[106px] w-[106px] items-center justify-center rounded-full bg-background">
-          <View className="h-[74px] w-[74px] items-center justify-center rounded-full bg-card">
+        <View className="h-26 w-26 items-center justify-center rounded-full bg-background">
+          <View className="h-18 w-18 items-center justify-center rounded-full bg-card">
             <Text
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
-              className="text-[13px] font-semibold text-foreground"
+              className="text-sm font-semibold text-foreground"
             >
               {formatBRLShort(summary.total)}
             </Text>
           </View>
         </View>
 
-        <View className="ml-4 flex-1 gap-[10px]">
+        <View className="ml-4 flex-1 gap-2.5">
           {summary.allocations.map((allocation) => (
             <View key={allocation.category}>
               <View className="flex-row items-center justify-between gap-2">
@@ -50,7 +50,7 @@ export function AllocationSection({ summary }: Props) {
                 </Text>
               </View>
 
-              <View className="mt-1 h-[7px] overflow-hidden rounded-full bg-card">
+              <View className="mt-1 h-2 overflow-hidden rounded-full bg-card">
                 <View
                   style={{ width: `${Math.round(allocation.barRatio * 100)}%` }}
                   className={`h-full rounded-full ${BAR_COLORS[allocation.category]}`}

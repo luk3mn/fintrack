@@ -1,4 +1,5 @@
 import { maturityDateLabel } from "@/lib/dates";
+import { institutionKey, KNOWN_INSTITUTIONS } from "@/lib/institutions";
 import type { Cents, Investment } from "@/types/domain";
 
 export type InvestmentCategory = "fixed" | "funds" | "equity";
@@ -71,6 +72,63 @@ export type InvestmentSummary = {
   allocations: InvestmentAllocation[];
   maturities: InvestmentMaturity[];
 };
+
+export type InvestmentInstitution = {
+  key: string;
+  label: string;
+  logo: string;
+  balance: Cents;
+  count: number;
+  share: number;
+};
+
+export function summarizeInvestmentsByInstitution(
+  investments: Investment[],
+): InvestmentInstitution[] {
+  const totals = new Map<string, { balance: Cents; count: number }>();
+
+  for (const investment of investments) {
+    const key =
+      institutionKey(
+        investment.institution ?? investment.issuer ?? investment.name,
+      ) ?? "other";
+    const current = totals.get(key) ?? { balance: 0, count: 0 };
+
+    current.balance += investment.balance;
+    current.count += 1;
+    totals.set(key, current);
+  }
+
+  const total = investments.reduce((sum, item) => sum + item.balance, 0);
+  const rows: InvestmentInstitution[] = KNOWN_INSTITUTIONS.map(
+    ({ key, label, logo }) => {
+      const current = totals.get(key) ?? { balance: 0, count: 0 };
+
+      return {
+        key,
+        label,
+        logo,
+        balance: current.balance,
+        count: current.count,
+        share: total > 0 ? current.balance / total : 0,
+      };
+    },
+  );
+
+  const other = totals.get("other");
+  if (other) {
+    rows.push({
+      key: "other",
+      label: "Outros",
+      logo: "Outros",
+      balance: other.balance,
+      count: other.count,
+      share: total > 0 ? other.balance / total : 0,
+    });
+  }
+
+  return rows;
+}
 
 export function summarizeInvestments(
   investments: Investment[],

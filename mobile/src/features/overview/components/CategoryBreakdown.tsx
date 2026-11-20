@@ -14,8 +14,8 @@ export function CategoryBreakdown({ categories }: Props) {
 
   if (categories.length === 0) {
     return (
-      <View className="rounded-[16px] bg-card px-4 py-5">
-        <Text className="text-[11px] text-subtle">
+      <View className="rounded-2xl bg-card px-4 py-5">
+        <Text className="text-xs text-subtle">
           Sem gastos categorizados neste mês.
         </Text>
       </View>
@@ -25,7 +25,7 @@ export function CategoryBreakdown({ categories }: Props) {
   const top = categories[0]?.amount ?? 0;
 
   return (
-    <View className="gap-[22px] px-1">
+    <View className="gap-5 px-1">
       {categories.map((category, index) => {
         const width =
           top > 0
@@ -36,12 +36,12 @@ export function CategoryBreakdown({ categories }: Props) {
           <View key={category.name} className="flex-row items-center">
             <Text
               numberOfLines={1}
-              className="w-[86px] text-xs text-soft"
+              className="w-22 text-xs text-soft"
             >
               {category.name}
             </Text>
 
-            <View className="ml-1.5 w-[130px]">
+            <View className="ml-1.5 w-32">
               <View
                 style={{
                   width,
@@ -53,7 +53,7 @@ export function CategoryBreakdown({ categories }: Props) {
               />
             </View>
 
-            <Text className="flex-1 pl-6 text-[11px] font-medium text-hero-foreground">
+            <Text className="flex-1 pl-6 text-xs font-medium text-hero-foreground">
               {formatBRLCompact(category.amount)}
             </Text>
           </View>
