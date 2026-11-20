@@ -7,13 +7,8 @@ import type { PluggyPage, PluggyTransaction } from "@/api/types";
 import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useItems } from "@/features/accounts/hooks/useItems";
 import { toTransaction } from "@/lib/mappers";
-import type { Account, AccountKind, Cents, Transaction } from "@/types/domain";
-
-export type Summary = {
-  cash: Cents;
-  cardBills: Cents;
-  available: Cents;
-};
+import { summarizeAccounts } from "@/lib/summary";
+import type { AccountKind, Cents, Transaction } from "@/types/domain";
 
 export type CategoryTotal = {
   name: string;
@@ -63,16 +58,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   income: "Receitas",
   other: "Outros",
 };
-
-const sum = (accounts: Account[]) =>
-  accounts.reduce((total, account) => total + account.balance, 0);
-
-export function summarize(accounts: Account[]): Summary {
-  const cash = sum(accounts.filter((account) => account.kind !== "credit"));
-  const cardBills = sum(accounts.filter((account) => account.kind === "credit"));
-
-  return { cash, cardBills, available: cash - cardBills };
-}
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -155,8 +140,9 @@ export function useOverview() {
       ),
     [accountsQuery.data],
   );
+  console.log("accounts", accounts);
 
-  const summary = useMemo(() => summarize(accounts), [accounts]);
+  const summary = useMemo(() => summarizeAccounts(accounts), [accounts]);
 
   const cashAccounts = useMemo(
     () => accounts.filter((account) => account.kind !== "credit"),
@@ -285,8 +271,6 @@ export function useOverview() {
   const monthLabel = `${current.month
     .toLocaleDateString("pt-BR", { month: "long" })
     .toUpperCase()} ${current.month.getFullYear()}`;
-
-  console.log("...", accounts);
 
   return {
     accounts,

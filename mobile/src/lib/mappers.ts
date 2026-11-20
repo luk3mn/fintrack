@@ -23,7 +23,9 @@ export function toAccount(account: PluggyAccount): Account {
   return {
     id: account.id,
     itemId: account.itemId,
-    institution: account.marketingName ?? account.name,
+    institution: account.institution ?? account.marketingName ?? account.name,
+    name: account.name,
+    subtype: account.subtype || undefined,
     kind: toKind(account),
     number: account.number ?? undefined,
     balance: toCents(account.balance),
@@ -65,6 +67,7 @@ export function toConnection(item: PluggyItem): Connection {
   return {
     id: item.id,
     status: item.status,
+    institution: item.institution ?? undefined,
     lastUpdatedAt: item.lastUpdatedAt ?? undefined,
   };
 }

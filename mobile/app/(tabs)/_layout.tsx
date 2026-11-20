@@ -34,6 +34,20 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="accounts"
+        options={{
+          title: "Contas",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="grid-outline"
+              color={typeof color === "string" ? color : colors.muted}
+              size={size}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

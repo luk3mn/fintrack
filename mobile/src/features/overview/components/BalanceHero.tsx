@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import { formatBRL } from "@/lib/money";
-import type { Summary } from "../hooks/useOverview";
+import type { Summary } from "@/lib/summary";
 
 type Props = {
   summary: Summary;

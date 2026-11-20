@@ -8,6 +8,7 @@ export type PluggyAccount = {
   number?: string | null;
   balance: number;
   currencyCode: string;
+  institution?: string;
 };
 
 export type PluggyItem = {
@@ -16,6 +17,7 @@ export type PluggyItem = {
   executionStatus?: string;
   lastUpdatedAt?: string | null;
   connector?: string;
+  institution?: string;
 };
 
 export type PluggyTransaction = {

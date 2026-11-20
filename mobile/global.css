@@ -82,6 +82,7 @@
   --app-hero-foreground: #221711;
   --app-soft: #674432;
   --app-warm: #8a5b42;
+  --app-tile: #eee3dd;
 }
 
 /* Dark mode: darkest space-indigo as the background. */
@@ -101,6 +102,7 @@
     --app-hero-foreground: #f0f1f4;
     --app-soft: #a5a9c0;
     --app-warm: #bd8e75;
+    --app-tile: #252541;
   }
 }
 
@@ -119,4 +121,5 @@
   --color-hero-foreground: var(--app-hero-foreground);
   --color-soft: var(--app-soft);
   --color-warm: var(--app-warm);
+  --color-tile: var(--app-tile);
 }

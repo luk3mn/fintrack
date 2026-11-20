@@ -6,6 +6,8 @@ export type Account = {
   id: string;
   itemId: string;
   institution: string;
+  name: string;
+  subtype?: string;
   kind: AccountKind;
   number?: string;
   balance: Cents;
@@ -36,5 +38,6 @@ export type Investment = {
 export type Connection = {
   id: string;
   status: string;
+  institution?: string;
   lastUpdatedAt?: string;
 };

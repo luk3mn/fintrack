@@ -84,6 +84,7 @@ export const themes = {
     heroForeground: palettes.parchment[900],
     soft: palettes.parchment[700],
     warm: palettes.parchment[600],
+    tile: palettes.parchment[100],
   },
   dark: {
     background: palettes.spaceIndigo[950],
@@ -100,6 +101,7 @@ export const themes = {
     heroForeground: palettes.dustyGrape[50],
     soft: palettes.dustyGrape[300],
     warm: palettes.parchment[400],
+    tile: palettes.spaceIndigo[800],
   },
 } as const;
 
