@@ -5,6 +5,10 @@ import { connectionIdentityFromAccounts } from "./institutions";
 import { pluggy, UpstreamError } from "./pluggy";
 
 type Paginated = { results: Record<string, unknown>[] };
+type CursorPage = {
+  results: Record<string, unknown>[];
+  next: string | null;
+};
 
 type Account = {
   name?: string | null;
@@ -23,7 +27,7 @@ type Item = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const MAX_PAGE_SIZE = 500;
+const MAX_CURSOR_PAGES = 20;
 const MEU_PLUGGY_CONNECTOR_ID = 200;
 
 const itemIds = (env: Env) => csv(env.PLUGGY_ITEM_IDS);
@@ -31,6 +35,9 @@ const itemIds = (env: Env) => csv(env.PLUGGY_ITEM_IDS);
 const isMeuPluggy = (item: Item) =>
   item.connector?.id === MEU_PLUGGY_CONNECTOR_ID ||
   item.connector?.name?.trim().toLowerCase() === "meupluggy";
+
+const cursorQuery = (next: string) =>
+  Object.fromEntries(new URLSearchParams(next.replace(/^\?/, "")).entries());
 
 const app = new Hono<AppEnv>();
 
@@ -102,7 +109,7 @@ app.get("/investments", async (c) => {
 });
 
 app.get("/transactions", async (c) => {
-  const { accountId, from, to, page, pageSize } = c.req.query();
+  const { accountId, from, to } = c.req.query();
 
   if (!accountId || !UUID.test(accountId)) {
     return c.json({ error: "invalid_account_id" }, 400);
@@ -112,20 +119,50 @@ app.get("/transactions", async (c) => {
     return c.json({ error: "invalid_date" }, 400);
   }
 
-  const size = Math.min(Number(pageSize) || 100, MAX_PAGE_SIZE);
-  const pageNumber = Math.max(Number(page) || 1, 1);
+  const results: Record<string, unknown>[] = [];
+  let query: Record<string, string | undefined> = {
+    accountId,
+    dateFrom: from,
+    dateTo: to,
+  };
 
-  const data = await pluggy(c.env, "/transactions", {
-    query: {
-      accountId,
-      from,
-      to,
-      page: String(pageNumber),
-      pageSize: String(size),
-    },
+  for (let page = 0; page < MAX_CURSOR_PAGES; page += 1) {
+    const data = await pluggy<CursorPage>(c.env, "/v2/transactions", {
+      query,
+    });
+
+    for (const transaction of data.results) {
+      results.push({
+        id: transaction.id,
+        accountId: transaction.accountId ?? accountId,
+        date:
+          typeof transaction.date === "string"
+            ? transaction.date.slice(0, 10)
+            : transaction.date,
+        description:
+          transaction.descriptionRaw ?? transaction.description ?? "",
+        amount: transaction.amount,
+        type:
+          transaction.type === "DEBIT" || transaction.type === "CREDIT"
+            ? transaction.type
+            : typeof transaction.amount === "number" && transaction.amount < 0
+              ? "DEBIT"
+              : "CREDIT",
+        category: transaction.category,
+        currencyCode: transaction.currencyCode,
+      });
+    }
+
+    if (!data.next) break;
+    query = cursorQuery(data.next);
+  }
+
+  return c.json({
+    total: results.length,
+    totalPages: 1,
+    page: 1,
+    results,
   });
-
-  return c.json(data);
 });
 
 app.post("/refresh/:itemId", async (c) => {
