@@ -1,7 +1,15 @@
 type BankAccount = {
   name?: string | null;
   marketingName?: string | null;
+  taxNumber?: string | null;
   bankData?: { transferNumber?: string | null } | null;
+};
+
+export type PersonType = "PF" | "PJ";
+
+export type ConnectionIdentity = {
+  institution?: string;
+  personType?: PersonType;
 };
 
 const COMPE: Record<string, string> = {
@@ -49,9 +57,11 @@ function bankCode(account: BankAccount): string | undefined {
     .match(/^(\d{3})\//)?.[1];
 }
 
+function taxDigits(account: BankAccount): string {
+  return account.taxNumber?.replace(/\D/g, "") ?? "";
+}
+
 /**
- * Resolves the financial institution of a connection from its accounts.
- *
  * Pluggy exposes the institution through `connector.name` for direct
  * connectors, but Meu Pluggy proxy items always report the "MeuPluggy"
  * connector. For those, the bank code in `bankData.transferNumber` and the
@@ -76,4 +86,30 @@ export function institutionFromAccounts(
   }
 
   return undefined;
+}
+
+/**
+ * A CPF has 11 digits; a CNPJ has 14. This is what tells apart two
+ * connections to the same institution (for example Nubank PF and Nubank PJ).
+ */
+export function personTypeFromAccounts(
+  accounts: BankAccount[],
+): PersonType | undefined {
+  for (const account of accounts) {
+    const digits = taxDigits(account);
+
+    if (digits.length === 14) return "PJ";
+    if (digits.length === 11) return "PF";
+  }
+
+  return undefined;
+}
+
+export function connectionIdentityFromAccounts(
+  accounts: BankAccount[],
+): ConnectionIdentity {
+  return {
+    institution: institutionFromAccounts(accounts),
+    personType: personTypeFromAccounts(accounts),
+  };
 }

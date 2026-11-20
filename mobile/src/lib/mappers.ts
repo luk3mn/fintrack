@@ -68,6 +68,7 @@ export function toConnection(item: PluggyItem): Connection {
     id: item.id,
     status: item.status,
     institution: item.institution ?? undefined,
+    personType: item.personType ?? undefined,
     lastUpdatedAt: item.lastUpdatedAt ?? undefined,
   };
 }

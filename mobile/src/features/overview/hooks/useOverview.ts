@@ -140,7 +140,6 @@ export function useOverview() {
       ),
     [accountsQuery.data],
   );
-  console.log("accounts", accounts);
 
   const summary = useMemo(() => summarizeAccounts(accounts), [accounts]);
 

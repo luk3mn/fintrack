@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { requireUser } from "./auth";
 import { csv, type AppEnv, type Env } from "./env";
-import { institutionFromAccounts } from "./institutions";
+import { connectionIdentityFromAccounts } from "./institutions";
 import { pluggy, UpstreamError } from "./pluggy";
 
 type Paginated = { results: Record<string, unknown>[] };
@@ -9,6 +9,7 @@ type Paginated = { results: Record<string, unknown>[] };
 type Account = {
   name?: string | null;
   marketingName?: string | null;
+  taxNumber?: string | null;
   bankData?: { transferNumber?: string | null } | null;
 };
 
@@ -44,8 +45,10 @@ app.get("/items", async (c) => {
       ]);
 
       const connector = item.connector?.name?.trim();
+      const accountsList = accounts.results as Account[];
+      const identity = connectionIdentityFromAccounts(accountsList);
       const institution = isMeuPluggy(item)
-        ? institutionFromAccounts(accounts.results as Account[])
+        ? identity.institution
         : connector;
 
       return {
@@ -55,6 +58,7 @@ app.get("/items", async (c) => {
         lastUpdatedAt: item.lastUpdatedAt,
         connector,
         institution,
+        personType: identity.personType,
       };
     }),
   );
@@ -70,7 +74,7 @@ app.get("/accounts", async (c) => {
       });
 
       const accounts = data.results as Account[];
-      const institution = institutionFromAccounts(accounts);
+      const institution = connectionIdentityFromAccounts(accounts).institution;
 
       return accounts.map((account) => ({
         ...account,

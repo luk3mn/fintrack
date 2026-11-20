@@ -39,5 +39,7 @@ export type Connection = {
   id: string;
   status: string;
   institution?: string;
+  personType?: "PF" | "PJ";
+  displayName?: string;
   lastUpdatedAt?: string;
 };

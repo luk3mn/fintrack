@@ -18,6 +18,7 @@ export type PluggyItem = {
   lastUpdatedAt?: string | null;
   connector?: string;
   institution?: string;
+  personType?: "PF" | "PJ";
 };
 
 export type PluggyTransaction = {
