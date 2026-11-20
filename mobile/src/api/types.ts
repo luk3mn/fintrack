@@ -38,6 +38,7 @@ export type PluggyInvestment = {
   subtype?: string | null;
   name: string;
   issuer?: string | null;
+  institution?: { name?: string | null } | null;
   dueDate?: string | null;
   balance: number;
   amountProfit?: number | null;

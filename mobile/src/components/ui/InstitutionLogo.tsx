@@ -32,6 +32,28 @@ const LOGOS: Record<string, Logo> = {
   },
 };
 
+const ALIASES: { pattern: RegExp; key: string }[] = [
+  { pattern: /\bnu financeira\b|\bnubank\b/, key: "nubank" },
+  { pattern: /\bbanco inter\b|\binter\b/, key: "banco inter" },
+  { pattern: /\bmercado pago\b|\bmercadopago\b/, key: "mercado pago" },
+];
+
+function normalize(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function logoKey(institution: string) {
+  const normalized = normalize(institution);
+  if (LOGOS[normalized]) return normalized;
+
+  return ALIASES.find((alias) => alias.pattern.test(normalized))?.key;
+}
+
 function initial(name: string) {
   const trimmed = name.trim();
   return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
@@ -47,9 +69,7 @@ export function InstitutionLogo({
   size = 38,
   first = false,
 }: Props) {
-  const logo = institution
-    ? LOGOS[institution.trim().toLowerCase()]
-    : undefined;
+  const logo = institution ? LOGOS[logoKey(institution) ?? ""] : undefined;
   const dimensions = { width: size, height: size, borderRadius: size * 0.34 };
 
   if (!logo) {

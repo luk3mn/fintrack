@@ -7,12 +7,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import { useThemeColors } from "@/theme/tokens";
 import { AccountListRow } from "../components/AccountListRow";
 import { AccountsHeader } from "../components/AccountsHeader";
 import { AccountsHero } from "../components/AccountsHero";
 import { ConnectionRow } from "../components/ConnectionRow";
-import { SectionTitle } from "../components/SectionTitle";
 import { useAccountsScreen } from "../hooks/useAccountsScreen";
 
 const TOP_PADDING = 24;

@@ -28,7 +28,9 @@ export type Investment = {
   itemId: string;
   name: string;
   type: string;
+  subtype?: string;
   issuer?: string;
+  institution?: string;
   dueDate?: string;
   balance: Cents;
   profit?: Cents;

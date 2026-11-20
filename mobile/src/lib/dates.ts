@@ -31,6 +31,28 @@ export function relativeSyncLabel(date?: Date) {
   return `Atualizado há ${Math.floor(elapsed / DAY)} d`;
 }
 
+const MONTHS = [
+  "JAN",
+  "FEV",
+  "MAR",
+  "ABR",
+  "MAI",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SET",
+  "OUT",
+  "NOV",
+  "DEZ",
+];
+
+export function maturityDateLabel(date?: Date) {
+  if (!date || !isValidDate(date)) return "SEM DATA";
+
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${day} ${MONTHS[date.getUTCMonth()]}`;
+}
+
 export function connectionUpdatedLabel(date?: Date) {
   if (!date || !isValidDate(date)) return "Nunca atualizado";
 

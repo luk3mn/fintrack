@@ -48,6 +48,20 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="investments"
+        options={{
+          title: "Investir",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="pie-chart-outline"
+              color={typeof color === "string" ? color : colors.muted}
+              size={size}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

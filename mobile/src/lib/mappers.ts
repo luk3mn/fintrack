@@ -52,7 +52,10 @@ export function toInvestment(investment: PluggyInvestment): Investment {
     itemId: investment.itemId,
     name: investment.name,
     type: investment.type,
+    subtype: investment.subtype ?? undefined,
     issuer: investment.issuer ?? undefined,
+    institution:
+      investment.institution?.name ?? investment.issuer ?? undefined,
     dueDate: investment.dueDate ?? undefined,
     balance: toCents(investment.balance),
     profit:
