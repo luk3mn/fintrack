@@ -5,6 +5,15 @@ const brl = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
+const brlCompact = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
+
 export const toCents = (value: number): Cents => Math.round(value * 100);
 
 export const formatBRL = (cents: Cents) => brl.format(cents / 100);
+
+export const formatBRLCompact = (cents: Cents) =>
+  brlCompact.format(cents / 100);

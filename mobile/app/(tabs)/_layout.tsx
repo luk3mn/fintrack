@@ -24,6 +24,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Visão geral",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="wallet-outline"

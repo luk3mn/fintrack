@@ -1,15 +1,56 @@
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { signOut } from "@/features/auth/api/auth";
+import { formatBRLCompact } from "@/lib/money";
 import { useThemeColors } from "@/theme/tokens";
-import { AccountRow } from "../components/AccountRow";
-import { BalanceCard } from "../components/BalanceCard";
+import { BalanceHero } from "../components/BalanceHero";
+import { BudgetSection } from "../components/BudgetSection";
+import { CashFlowChart } from "../components/CashFlowChart";
+import { CategoryBreakdown } from "../components/CategoryBreakdown";
+import { MetricCard } from "../components/MetricCard";
+import { MonthPicker } from "../components/MonthPicker";
+import { OverviewHeader } from "../components/OverviewHeader";
+import { SectionHeader } from "../components/SectionHeader";
 import { useOverview } from "../hooks/useOverview";
+
+const TOP_PADDING = 24;
 
 export function OverviewScreen() {
   const colors = useThemeColors();
-  const { accounts, summary, isLoading, isError, isRefetching, refetch } =
-    useOverview();
+  const insets = useSafeAreaInsets();
+  const {
+    summary,
+    monthLabel,
+    isCurrentMonth,
+    canGoNext,
+    canGoPrev,
+    goToPreviousMonth,
+    goToNextMonth,
+    income,
+    expenses,
+    savingsRate,
+    incomeDelta,
+    expensesDelta,
+    savingsDelta,
+    weekly,
+    currentBucket,
+    categories,
+    lastSync,
+    lastDay,
+    isLoading,
+    isError,
+    isRefetching,
+    refetch,
+  } = useOverview();
 
   if (isLoading) {
     return (
@@ -21,7 +62,10 @@ export function OverviewScreen() {
 
   if (isError) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-background px-6">
+      <View
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        style={{ paddingTop: insets.top }}
+      >
         <Text className="text-center text-base text-muted">
           Não foi possível carregar suas contas.
         </Text>
@@ -32,9 +76,15 @@ export function OverviewScreen() {
     );
   }
 
+  const monthShort = monthLabel.split(" ")[0].slice(0, 3).toLowerCase();
+
   return (
     <ScrollView
       className="flex-1 bg-background"
+      contentContainerStyle={{
+        paddingTop: insets.top > 0 ? insets.top + 12 : TOP_PADDING,
+        paddingBottom: insets.bottom + 80,
+      }}
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
@@ -44,26 +94,95 @@ export function OverviewScreen() {
           tintColor={colors.muted}
         />
       }
+      showsVerticalScrollIndicator={false}
     >
-      <View className="gap-6 p-4">
-        <BalanceCard summary={summary} />
+      <View className="px-4">
+        <OverviewHeader lastSync={lastSync} />
 
-        <View className="gap-2">
-          <Text className="text-sm font-medium uppercase tracking-wide text-muted">
-            Contas
-          </Text>
-          <View className="overflow-hidden rounded-2xl border border-border bg-card">
-            {accounts.map((account, index) => (
-              <AccountRow
-                key={account.id}
-                account={account}
-                divider={index > 0}
-              />
-            ))}
-          </View>
+        <View className="pt-3">
+          <MonthPicker
+            label={monthLabel}
+            canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
+            onPrev={goToPreviousMonth}
+            onNext={goToNextMonth}
+          />
         </View>
 
-        <Button title="Sair" variant="secondary" onPress={() => signOut()} />
+        <View className="pt-4">
+          <BalanceHero summary={summary} />
+        </View>
+
+        <View className="flex-row gap-2 pt-4">
+          <MetricCard
+            label="Entradas"
+            value={formatBRLCompact(income)}
+            delta={incomeDelta}
+          />
+          <MetricCard
+            label="Saídas"
+            value={formatBRLCompact(expenses)}
+            delta={expensesDelta}
+          />
+          <MetricCard
+            label="Poupança"
+            value={
+              savingsRate === undefined
+                ? "—"
+                : `${Math.round(savingsRate)}%`
+            }
+            delta={savingsDelta}
+            deltaSuffix=" p.p."
+          />
+        </View>
+
+        <View className="pt-6">
+          <SectionHeader
+            title="Fluxo do mês"
+            action="VER RELATÓRIO"
+            actionCaps
+          />
+        </View>
+
+        <View className="pt-2">
+          <CashFlowChart
+            data={weekly}
+            highlight={currentBucket}
+            startLabel={`01 ${monthShort}`}
+            middleLabel={`15 ${monthShort}`}
+            endLabel={
+              isCurrentMonth ? "hoje" : `${lastDay} ${monthShort}`
+            }
+          />
+        </View>
+
+        <View className="pt-5">
+          <SectionHeader title="Para onde foi" action="Ver relatório" />
+        </View>
+
+        <View className="pt-3">
+          <CategoryBreakdown categories={categories} />
+        </View>
+
+        <View className="pt-6">
+          <SectionHeader title="Orçamentos" />
+        </View>
+
+        <View className="pt-2">
+          <BudgetSection />
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Sair da conta"
+          onPress={() => {
+            void signOut();
+          }}
+          className="mt-8 flex-row items-center justify-center gap-2 py-3 active:opacity-60"
+        >
+          <Ionicons name="log-out-outline" size={14} color={colors.subtle} />
+          <Text className="text-[11px] text-subtle">Sair da conta</Text>
+        </Pressable>
       </View>
     </ScrollView>
   );

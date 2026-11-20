@@ -4,4 +4,6 @@ export const queryKeys = {
   investments: ["investments"] as const,
   transactions: (accountId: string, from?: string, to?: string) =>
     ["transactions", accountId, from, to] as const,
+  periodTransactions: (accountId: string, from?: string, to?: string) =>
+    ["period-transactions", accountId, from, to] as const,
 };

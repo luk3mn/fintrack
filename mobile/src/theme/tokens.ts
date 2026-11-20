@@ -80,6 +80,10 @@ export const themes = {
     accent: palettes.spaceIndigo[600],
     danger: palettes.almondSilk[600],
     subtle: palettes.parchment[600],
+    hero: palettes.spaceIndigo[200],
+    heroForeground: palettes.parchment[900],
+    soft: palettes.parchment[700],
+    warm: palettes.parchment[600],
   },
   dark: {
     background: palettes.spaceIndigo[950],
@@ -92,6 +96,10 @@ export const themes = {
     accent: palettes.spaceIndigo[300],
     danger: palettes.almondSilk[300],
     subtle: palettes.dustyGrape[500],
+    hero: palettes.spaceIndigo[700],
+    heroForeground: palettes.dustyGrape[50],
+    soft: palettes.dustyGrape[300],
+    warm: palettes.parchment[400],
   },
 } as const;
 

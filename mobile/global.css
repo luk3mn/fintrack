@@ -78,6 +78,10 @@
   --app-accent: #4a4a82;
   --app-danger: #7e564e;
   --app-subtle: #8a5b42;
+  --app-hero: #bebeda;
+  --app-hero-foreground: #221711;
+  --app-soft: #674432;
+  --app-warm: #8a5b42;
 }
 
 /* Dark mode: darkest space-indigo as the background. */
@@ -93,6 +97,10 @@
     --app-accent: #9e9ec7;
     --app-danger: #c5a7a0;
     --app-subtle: #6a7095;
+    --app-hero: #383861;
+    --app-hero-foreground: #f0f1f4;
+    --app-soft: #a5a9c0;
+    --app-warm: #bd8e75;
   }
 }
 
@@ -107,4 +115,8 @@
   --color-accent: var(--app-accent);
   --color-danger: var(--app-danger);
   --color-subtle: var(--app-subtle);
+  --color-hero: var(--app-hero);
+  --color-hero-foreground: var(--app-hero-foreground);
+  --color-soft: var(--app-soft);
+  --color-warm: var(--app-warm);
 }
