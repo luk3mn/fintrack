@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
-import { Platform, Text, View } from "react-native";
+import { Platform, Text, View, type ColorValue } from "react-native";
 import { BottomSheet as ExpoBottomSheet } from "@expo/ui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "@/theme/tokens";
@@ -9,7 +9,7 @@ type ContentPadding = ExpoSheetProps["contentPadding"];
 
 export type BottomSheetProps = Omit<
   ExpoSheetProps,
-  "isPresented" | "children" | "contentPadding" | "containerColor"
+  "isPresented" | "children" | "contentPadding"
 > & {
   visible: boolean;
   title?: string;
@@ -17,6 +17,7 @@ export type BottomSheetProps = Omit<
   header?: ReactNode;
   children: ReactNode;
   contentPadding?: ContentPadding;
+  containerColor?: ColorValue;
 };
 
 // Keep the platform defaults (16px on iOS/Android) so content never sticks to
@@ -56,6 +57,7 @@ export function BottomSheet({
   header,
   children,
   contentPadding,
+  containerColor,
   ...sheetProps
 }: BottomSheetProps) {
   const colors = useThemeColors();
@@ -66,7 +68,7 @@ export function BottomSheet({
     <ExpoBottomSheet
       {...sheetProps}
       isPresented={visible}
-      containerColor={colors.background}
+      containerColor={containerColor ?? colors.background}
       contentPadding={resolveContentPadding(contentPadding, insets.bottom)}
     >
       {/* Android's @expo/ui sheet does not apply the right contentPadding to

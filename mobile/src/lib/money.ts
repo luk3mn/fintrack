@@ -41,3 +41,6 @@ export const formatBRLShort = (cents: Cents) => {
 
 export const formatSignedBRL = (cents: Cents) =>
   cents > 0 ? `+ ${formatBRL(cents)}` : formatBRL(cents);
+
+export const formatNetBRL = (cents: Cents) =>
+  cents >= 0 ? `+ ${formatBRL(cents)}` : `- ${formatBRL(Math.abs(cents))}`;

@@ -1,29 +1,36 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { api } from "@/api/client";
-import { endpoints } from "@/api/endpoints";
+import { useQueries } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { queryKeys } from "@/api/keys";
-import type { PluggyPage, PluggyTransaction } from "@/api/types";
-import { toTransaction } from "@/lib/mappers";
-
-const PAGE_SIZE = 100;
+import { fetchPeriodTransactions } from "@/api/transactions";
 
 type Params = {
-  accountId: string;
-  from?: string;
-  to?: string;
+  accountIds: string[];
+  from: string;
+  to: string;
 };
 
-export function useTransactions({ accountId, from, to }: Params) {
-  return useInfiniteQuery({
-    queryKey: queryKeys.transactions(accountId, from, to),
-    initialPageParam: 1,
-    queryFn: ({ pageParam }) =>
-      api<PluggyPage<PluggyTransaction>>(endpoints.transactions, {
-        query: { accountId, from, to, page: pageParam, pageSize: PAGE_SIZE },
-      }),
-    getNextPageParam: (last) =>
-      last.page < last.totalPages ? last.page + 1 : undefined,
-    select: (data) =>
-      data.pages.flatMap((page) => page.results.map(toTransaction)),
+/** Loads real transactions for every connected account in one date interval. */
+export function useTransactions({ accountIds, from, to }: Params) {
+  const queries = useQueries({
+    queries: accountIds.map((accountId) => ({
+      queryKey: queryKeys.periodTransactions(accountId, from, to),
+      queryFn: () => fetchPeriodTransactions(accountId, from, to),
+      staleTime: 5 * 60_000,
+    })),
   });
+
+  const transactions = useMemo(
+    () => queries.flatMap((query) => query.data ?? []),
+    [queries],
+  );
+
+  const isLoading = queries.some((query) => query.isPending);
+  const isError = queries.length > 0 && queries.some((query) => query.isError);
+  const isRefetching = queries.some((query) => query.isRefetching);
+
+  const refetch = async () => {
+    await Promise.all(queries.map((query) => query.refetch()));
+  };
+
+  return { transactions, isLoading, isError, isRefetching, refetch };
 }

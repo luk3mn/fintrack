@@ -35,13 +35,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="accounts"
+        name="transactions"
         options={{
-          title: "Contas",
+          title: "Transações",
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons
-              name="grid-outline"
+              name="receipt-outline"
               color={typeof color === "string" ? color : colors.muted}
               size={size}
             />
@@ -56,6 +56,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="pie-chart-outline"
+              color={typeof color === "string" ? color : colors.muted}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="accounts"
+        options={{
+          title: "Contas",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="grid-outline"
               color={typeof color === "string" ? color : colors.muted}
               size={size}
             />

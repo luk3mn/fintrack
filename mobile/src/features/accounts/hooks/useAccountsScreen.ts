@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { withDisplayNames } from "@/lib/connections";
 import { summarizeAccounts } from "@/lib/summary";
 import type { Account, AccountKind, Connection } from "@/types/domain";
 import { useAccounts } from "./useAccounts";
@@ -31,38 +32,16 @@ export function useAccountsScreen() {
 
   const summary = useMemo(() => summarizeAccounts(accounts), [accounts]);
 
-  const connections = useMemo(() => {
-    const sorted = [...(itemsQuery.data ?? [])].sort(
-      (a: Connection, b: Connection) =>
-        updatedAt(b.lastUpdatedAt) - updatedAt(a.lastUpdatedAt),
-    );
-
-    const counts = new Map<string, number>();
-
-    for (const connection of sorted) {
-      if (!connection.institution) continue;
-      counts.set(
-        connection.institution,
-        (counts.get(connection.institution) ?? 0) + 1,
-      );
-    }
-
-    return sorted.map((connection) => {
-      const duplicated =
-        connection.institution &&
-        (counts.get(connection.institution) ?? 0) > 1;
-      const suffix = duplicated && connection.personType
-        ? ` ${connection.personType}`
-        : "";
-
-      return {
-        ...connection,
-        displayName: connection.institution
-          ? `${connection.institution}${suffix}`
-          : undefined,
-      };
-    });
-  }, [itemsQuery.data]);
+  const connections = useMemo(
+    () =>
+      withDisplayNames(
+        [...(itemsQuery.data ?? [])].sort(
+          (a: Connection, b: Connection) =>
+            updatedAt(b.lastUpdatedAt) - updatedAt(a.lastUpdatedAt),
+        ),
+      ),
+    [itemsQuery.data],
+  );
 
   const lastSync = useMemo(() => {
     const stamps = (itemsQuery.data ?? [])

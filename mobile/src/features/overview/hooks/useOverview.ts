@@ -1,12 +1,9 @@
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { api } from "@/api/client";
-import { endpoints } from "@/api/endpoints";
 import { queryKeys } from "@/api/keys";
-import type { PluggyPage, PluggyTransaction } from "@/api/types";
+import { fetchPeriodTransactions } from "@/api/transactions";
 import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useItems } from "@/features/accounts/hooks/useItems";
-import { toTransaction } from "@/lib/mappers";
 import { summarizeAccounts } from "@/lib/summary";
 import type { AccountKind, Cents, Transaction } from "@/types/domain";
 
@@ -28,8 +25,6 @@ const ORDER: Record<AccountKind, number> = {
   credit: 2,
 };
 
-const PAGE_SIZE = 500;
-const MAX_PAGES = 20;
 const MONTHS_BACK = 36;
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -96,31 +91,6 @@ function totals(transactions: Transaction[]): OverviewFlows {
 function percentChange(current: number, previous: number) {
   if (previous <= 0) return undefined;
   return ((current - previous) / previous) * 100;
-}
-
-async function fetchPeriodTransactions(
-  accountId: string,
-  from: string,
-  to: string,
-) {
-  const results: PluggyTransaction[] = [];
-  let page = 1;
-  let totalPages = 1;
-
-  do {
-    const data = await api<PluggyPage<PluggyTransaction>>(
-      endpoints.transactions,
-      {
-        query: { accountId, from, to, page, pageSize: PAGE_SIZE },
-      },
-    );
-
-    results.push(...data.results);
-    totalPages = data.totalPages;
-    page += 1;
-  } while (page <= totalPages && page <= MAX_PAGES);
-
-  return results.map(toTransaction);
 }
 
 export function useOverview() {

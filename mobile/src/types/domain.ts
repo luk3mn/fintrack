@@ -21,6 +21,7 @@ export type Transaction = {
   description: string;
   amount: Cents;
   category?: string;
+  currency?: string;
 };
 
 export type Investment = {

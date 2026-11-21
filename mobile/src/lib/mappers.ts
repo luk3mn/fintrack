@@ -35,14 +35,18 @@ export function toAccount(account: PluggyAccount): Account {
 
 export function toTransaction(transaction: PluggyTransaction): Transaction {
   const cents = Math.abs(toCents(transaction.amount));
+  const isDebit = transaction.type
+    ? transaction.type === "DEBIT"
+    : transaction.amount < 0;
 
   return {
     id: transaction.id,
     accountId: transaction.accountId,
     date: transaction.date,
     description: transaction.description,
-    amount: transaction.type === "DEBIT" ? -cents : cents,
+    amount: isDebit ? -cents : cents,
     category: transaction.category ?? undefined,
+    currency: transaction.currencyCode ?? undefined,
   };
 }
 

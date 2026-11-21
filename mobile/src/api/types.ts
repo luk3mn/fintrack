@@ -27,8 +27,9 @@ export type PluggyTransaction = {
   date: string;
   description: string;
   amount: number;
-  type: "DEBIT" | "CREDIT";
+  type?: "DEBIT" | "CREDIT" | null;
   category?: string | null;
+  currencyCode?: string | null;
 };
 
 export type PluggyInvestment = {
