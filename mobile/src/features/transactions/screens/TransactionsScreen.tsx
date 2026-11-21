@@ -10,7 +10,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import type { TransactionItem, TransactionSection } from "@/lib/transactions";
-import { FilterChips } from "../components/FilterChips";
 import { TransactionRow } from "../components/TransactionRow";
 import { TransactionSearch } from "../components/TransactionSearch";
 import { TransactionSectionHeader } from "../components/TransactionSectionHeader";
@@ -34,12 +33,6 @@ export function TransactionsScreen() {
     institutions,
     applyFilters,
     resetFilters,
-    periodLabelText,
-    hasPeriodFilter,
-    institutionLabel,
-    hasInstitutionFilter,
-    typeFilterLabel,
-    hasTypeFilter,
     search,
     setSearch,
     activeFilterCount,
@@ -117,7 +110,6 @@ export function TransactionsScreen() {
             <TransactionsHeader
               lastSync={lastSync}
               loading={isSyncLoading}
-              onRefresh={() => void refetch()}
               colors={colors}
             />
 
@@ -126,17 +118,6 @@ export function TransactionsScreen() {
               onChangeValue={setSearch}
               onFilterPress={() => setFiltersOpen(true)}
               activeFilterCount={activeFilterCount}
-              colors={colors}
-            />
-
-            <FilterChips
-              periodLabel={periodLabelText}
-              institutionLabel={institutionLabel}
-              typeFilterLabel={typeFilterLabel}
-              hasPeriodFilter={hasPeriodFilter}
-              hasInstitutionFilter={hasInstitutionFilter}
-              hasTypeFilter={hasTypeFilter}
-              onOpenFilters={() => setFiltersOpen(true)}
               colors={colors}
             />
 

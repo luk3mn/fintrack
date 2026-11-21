@@ -15,10 +15,8 @@ import {
   isInternalCardPayment,
   normalizeText,
   periodBounds,
-  periodLabel,
   shiftISODate,
   summarizeTransactions,
-  typeLabel,
   type TransactionItem,
   type TransactionSection,
 } from "@/lib/transactions";
@@ -236,13 +234,6 @@ export function useTransactionsScreen() {
     void saveTransactionFilters(DEFAULT_TRANSACTION_FILTERS);
   }, []);
 
-  const institutionLabel =
-    selectedInstitutions.length === 0
-      ? "Todas as contas"
-      : selectedInstitutions.length === 1
-        ? selectedInstitutions[0]
-        : `${selectedInstitutions[0]} +${selectedInstitutions.length - 1}`;
-
   const activeFilterCount =
     (selectedInstitutions.length > 0 ? 1 : 0) +
     (effectiveFilters.type === "all" ? 0 : 1) +
@@ -270,12 +261,6 @@ export function useTransactionsScreen() {
     institutions,
     applyFilters,
     resetFilters,
-    periodLabelText: periodLabel(effectiveFilters.period),
-    hasPeriodFilter: effectiveFilters.period !== "current-month",
-    institutionLabel,
-    hasInstitutionFilter: selectedInstitutions.length > 0,
-    typeFilterLabel: typeLabel(effectiveFilters.type),
-    hasTypeFilter: effectiveFilters.type !== "all",
     search,
     setSearch,
     activeFilterCount,

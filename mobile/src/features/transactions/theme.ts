@@ -3,8 +3,8 @@ import { palettes } from "@/theme/tokens";
 
 function makePalette(dark: boolean) {
   return {
-    background: dark ? palettes.spaceIndigo[950] : palettes.parchment[50],
-    card: dark ? palettes.spaceIndigo[900] : palettes.almondSilk[50],
+    background: dark ? palettes.spaceIndigo[950] : "#ffffff",
+    card: dark ? palettes.spaceIndigo[900] : palettes.dustyGrape[50],
     border: dark ? palettes.spaceIndigo[800] : palettes.parchment[100],
     foreground: dark ? palettes.dustyGrape[50] : palettes.parchment[900],
     muted: dark ? palettes.dustyGrape[300] : palettes.parchment[700],

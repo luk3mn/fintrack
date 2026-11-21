@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Text, View } from "react-native";
+import { AppBottomSheet } from "@/components/ui/AppBottomSheet";
 import { InstitutionLogo } from "@/components/ui/InstitutionLogo";
 import { relativeSyncLabel } from "@/lib/dates";
 import { summarizeInvestmentsByInstitution } from "@/lib/investments";
@@ -28,17 +28,13 @@ export function InstitutionBreakdownSheet({
   );
 
   return (
-    <BottomSheet
+    <AppBottomSheet
       visible={visible}
       onDismiss={onDismiss}
       title="Patrimônio por instituição"
       subtitle={`${relativeSyncLabel(lastSync)} · posição atual dos investimentos`}
     >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{ flexShrink: 1 }}
-        contentContainerStyle={{ gap: 16 }}
-      >
+      <View className="gap-4">
         <View className="rounded-2xl bg-card px-4 py-3">
           <Text className="text-xs uppercase tracking-wider text-muted">
             Total investido
@@ -99,7 +95,7 @@ export function InstitutionBreakdownSheet({
             </View>
           ))}
         </View>
-      </ScrollView>
-    </BottomSheet>
+      </View>
+    </AppBottomSheet>
   );
 }

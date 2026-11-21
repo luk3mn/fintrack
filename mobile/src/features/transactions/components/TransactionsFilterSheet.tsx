@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Pressable, Text, View } from "react-native";
+import { AppBottomSheet } from "@/components/ui/AppBottomSheet";
 import {
   DEFAULT_TRANSACTION_FILTERS,
   type TransactionFilters,
@@ -57,7 +57,88 @@ function SectionLabel({
   );
 }
 
-type ContentProps = {
+type OptionsProps = {
+  draft: TransactionFilters;
+  institutions: string[];
+  onChange: (
+    update: (current: TransactionFilters) => TransactionFilters,
+  ) => void;
+  colors: TransactionColors;
+};
+
+function FilterOptions({
+  draft,
+  institutions,
+  onChange,
+  colors,
+}: OptionsProps) {
+  const toggleInstitution = (name: string) => {
+    onChange((current) => ({
+      ...current,
+      institutions: current.institutions.includes(name)
+        ? current.institutions.filter((item) => item !== name)
+        : [...current.institutions, name],
+    }));
+  };
+
+  return (
+    <View className="gap-5">
+      <View className="gap-2">
+        <SectionLabel label="Período" colors={colors} />
+        {PERIOD_OPTIONS.map((option) => (
+          <OptionRow
+            key={option.key}
+            label={option.label}
+            selected={draft.period === option.key}
+            onPress={() =>
+              onChange((current) => ({ ...current, period: option.key }))
+            }
+            colors={colors}
+          />
+        ))}
+      </View>
+
+      <View className="gap-2">
+        <SectionLabel label="Instituição" colors={colors} />
+        <OptionRow
+          label="Todas as contas"
+          selected={draft.institutions.length === 0}
+          onPress={() =>
+            onChange((current) => ({ ...current, institutions: [] }))
+          }
+          colors={colors}
+        />
+        {institutions.map((name) => (
+          <OptionRow
+            key={name}
+            label={name}
+            selected={draft.institutions.includes(name)}
+            onPress={() => toggleInstitution(name)}
+            colors={colors}
+          />
+        ))}
+      </View>
+
+      <View className="gap-2">
+        <SectionLabel label="Tipo" colors={colors} />
+        {TYPE_OPTIONS.map((option) => (
+          <OptionRow
+            key={option.key}
+            label={option.label}
+            selected={draft.type === option.key}
+            onPress={() =>
+              onChange((current) => ({ ...current, type: option.key }))
+            }
+            colors={colors}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+type Props = {
+  visible: boolean;
   filters: TransactionFilters;
   institutions: string[];
   onApply: (filters: TransactionFilters) => void;
@@ -65,23 +146,22 @@ type ContentProps = {
   colors: TransactionColors;
 };
 
-function FilterSheetContent({
+export function TransactionsFilterSheet({
+  visible,
   filters,
   institutions,
   onApply,
   onDismiss,
   colors,
-}: ContentProps) {
+}: Props) {
   const [draft, setDraft] = useState<TransactionFilters>(filters);
+  const [wasVisible, setWasVisible] = useState(visible);
 
-  const toggleInstitution = (name: string) => {
-    setDraft((current) => ({
-      ...current,
-      institutions: current.institutions.includes(name)
-        ? current.institutions.filter((item) => item !== name)
-        : [...current.institutions, name],
-    }));
-  };
+  // Start every opening from the currently applied filters.
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) setDraft(filters);
+  }
 
   const apply = () => {
     onApply({
@@ -94,122 +174,49 @@ function FilterSheetContent({
   };
 
   return (
-    <View style={{ flexShrink: 1, minHeight: 0 }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{ flexGrow: 0, flexShrink: 1 }}
-        contentContainerStyle={{ gap: 20, paddingBottom: 16 }}
-      >
-        <View className="gap-2">
-          <SectionLabel label="Período" colors={colors} />
-          {PERIOD_OPTIONS.map((option) => (
-            <OptionRow
-              key={option.key}
-              label={option.label}
-              selected={draft.period === option.key}
-              onPress={() =>
-                setDraft((current) => ({ ...current, period: option.key }))
-              }
-              colors={colors}
-            />
-          ))}
-        </View>
-
-        <View className="gap-2">
-          <SectionLabel label="Instituição" colors={colors} />
-          <OptionRow
-            label="Todas as contas"
-            selected={draft.institutions.length === 0}
-            onPress={() =>
-              setDraft((current) => ({ ...current, institutions: [] }))
-            }
-            colors={colors}
-          />
-          {institutions.map((name) => (
-            <OptionRow
-              key={name}
-              label={name}
-              selected={draft.institutions.includes(name)}
-              onPress={() => toggleInstitution(name)}
-              colors={colors}
-            />
-          ))}
-        </View>
-
-        <View className="gap-2">
-          <SectionLabel label="Tipo" colors={colors} />
-          {TYPE_OPTIONS.map((option) => (
-            <OptionRow
-              key={option.key}
-              label={option.label}
-              selected={draft.type === option.key}
-              onPress={() =>
-                setDraft((current) => ({ ...current, type: option.key }))
-              }
-              colors={colors}
-            />
-          ))}
-        </View>
-      </ScrollView>
-
-      <View className="flex-row gap-2 pt-3">
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => setDraft(DEFAULT_TRANSACTION_FILTERS)}
-          className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
-          style={{ backgroundColor: colors.background }}
-        >
-          <Text className="text-sm font-medium" style={{ color: colors.muted }}>
-            Limpar
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={apply}
-          className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
-          style={{ backgroundColor: colors.accent }}
-        >
-          <Text
-            className="text-sm font-semibold"
-            style={{ color: colors.accentForeground }}
-          >
-            Aplicar filtros
-          </Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-type Props = ContentProps & {
-  visible: boolean;
-};
-
-export function TransactionsFilterSheet({
-  visible,
-  filters,
-  institutions,
-  onApply,
-  onDismiss,
-  colors,
-}: Props) {
-  return (
-    <BottomSheet
+    <AppBottomSheet
       visible={visible}
       onDismiss={onDismiss}
       title="Filtros"
       subtitle="Selecione um ou mais bancos e toque em aplicar."
       containerColor={colors.card}
+      footer={
+        <View className="flex-row gap-2">
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setDraft(DEFAULT_TRANSACTION_FILTERS)}
+            className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
+            style={{ backgroundColor: colors.background }}
+          >
+            <Text
+              className="text-sm font-medium"
+              style={{ color: colors.muted }}
+            >
+              Limpar
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={apply}
+            className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
+            style={{ backgroundColor: colors.accent }}
+          >
+            <Text
+              className="text-sm font-semibold"
+              style={{ color: colors.accentForeground }}
+            >
+              Aplicar filtros
+            </Text>
+          </Pressable>
+        </View>
+      }
     >
-      {visible ? (
-        <FilterSheetContent
-          filters={filters}
-          institutions={institutions}
-          onApply={onApply}
-          onDismiss={onDismiss}
-          colors={colors}
-        />
-      ) : null}
-    </BottomSheet>
+      <FilterOptions
+        draft={draft}
+        institutions={institutions}
+        onChange={setDraft}
+        colors={colors}
+      />
+    </AppBottomSheet>
   );
 }
