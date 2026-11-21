@@ -4,6 +4,12 @@ import { queryKeys } from "@/api/keys";
 import { fetchPeriodTransactions } from "@/api/transactions";
 import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useItems } from "@/features/accounts/hooks/useItems";
+import { categoryLabel } from "@/lib/categories";
+import {
+  findInternalTransferIds,
+  isInternalCardPayment,
+  shiftISODate,
+} from "@/lib/transactions";
 import { summarizeAccounts } from "@/lib/summary";
 import type { AccountKind, Cents, Transaction } from "@/types/domain";
 
@@ -27,33 +33,6 @@ const ORDER: Record<AccountKind, number> = {
 
 const MONTHS_BACK = 36;
 
-const CATEGORY_LABELS: Record<string, string> = {
-  groceries: "Mercado",
-  supermarket: "Mercado",
-  restaurants: "Restaurantes",
-  "food and drink": "Alimentação",
-  food: "Alimentação",
-  housing: "Moradia",
-  rent: "Moradia",
-  transportation: "Transporte",
-  transport: "Transporte",
-  healthcare: "Saúde",
-  health: "Saúde",
-  education: "Educação",
-  entertainment: "Lazer",
-  shopping: "Compras",
-  services: "Serviços",
-  utilities: "Contas",
-  travel: "Viagens",
-  taxes: "Impostos",
-  insurance: "Seguros",
-  investments: "Investimentos",
-  transfers: "Transferências",
-  salary: "Salário",
-  income: "Receitas",
-  other: "Outros",
-};
-
 const pad = (value: number) => String(value).padStart(2, "0");
 
 const isoDate = (date: Date) =>
@@ -71,11 +50,20 @@ function boundsFor(base: Date, offset: number) {
   };
 }
 
-function totals(transactions: Transaction[]): OverviewFlows {
+function totals(
+  transactions: Transaction[],
+  internalIds: Set<string>,
+): OverviewFlows {
   let income = 0;
   let expenses = 0;
 
   for (const transaction of transactions) {
+    if (
+      internalIds.has(transaction.id) ||
+      isInternalCardPayment(transaction.description, transaction.category)
+    ) {
+      continue;
+    }
     if (transaction.amount > 0) income += transaction.amount;
     else expenses += -transaction.amount;
   }
@@ -83,8 +71,7 @@ function totals(transactions: Transaction[]): OverviewFlows {
   return {
     income,
     expenses,
-    savingsRate:
-      income > 0 ? ((income - expenses) / income) * 100 : undefined,
+    savingsRate: income > 0 ? ((income - expenses) / income) * 100 : undefined,
   };
 }
 
@@ -118,7 +105,9 @@ export function useOverview() {
     [accounts],
   );
 
-  const from = previous.startISO;
+  // A small buffer before the window lets transfers that cross the month
+  // boundary find their pair, while the month filters below still ignore it.
+  const from = shiftISODate(previous.startISO, -3);
   const to = monthOffset === 0 ? todayISO : current.endISO;
 
   const periodQueries = useQueries({
@@ -140,8 +129,7 @@ export function useOverview() {
   const derived = useMemo(() => {
     const currentTransactions = transactions.filter(
       (transaction) =>
-        transaction.date >= current.startISO &&
-        transaction.date <= currentEnd,
+        transaction.date >= current.startISO && transaction.date <= currentEnd,
     );
     const previousTransactions = transactions.filter(
       (transaction) =>
@@ -149,8 +137,9 @@ export function useOverview() {
         transaction.date <= previous.endISO,
     );
 
-    const currentTotals = totals(currentTransactions);
-    const previousTotals = totals(previousTransactions);
+    const internalIds = findInternalTransferIds(transactions);
+    const currentTotals = totals(currentTransactions, internalIds);
+    const previousTotals = totals(previousTransactions, internalIds);
 
     const bucketOf = (date: string) => {
       const day = Number(date.slice(8, 10));
@@ -162,14 +151,18 @@ export function useOverview() {
 
     for (const transaction of currentTransactions) {
       if (transaction.amount >= 0) continue;
+      if (
+        internalIds.has(transaction.id) ||
+        isInternalCardPayment(transaction.description, transaction.category)
+      ) {
+        continue;
+      }
 
       const amount = -transaction.amount;
       weekly[bucketOf(transaction.date)] += amount;
 
       const raw = transaction.category?.trim();
-      const name = raw
-        ? (CATEGORY_LABELS[raw.toLowerCase()] ?? raw)
-        : "Outros";
+      const name = raw ? categoryLabel(raw) : "Outros";
       categoryTotals.set(name, (categoryTotals.get(name) ?? 0) + amount);
     }
 
@@ -177,8 +170,7 @@ export function useOverview() {
       .map(([name, amount]) => ({
         name,
         amount,
-        share:
-          currentTotals.expenses > 0 ? amount / currentTotals.expenses : 0,
+        share: currentTotals.expenses > 0 ? amount / currentTotals.expenses : 0,
       }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3);
@@ -186,13 +178,9 @@ export function useOverview() {
     return {
       currentTotals,
       weekly,
-      currentBucket:
-        monthOffset === 0 ? bucketOf(todayISO) : -1,
+      currentBucket: monthOffset === 0 ? bucketOf(todayISO) : -1,
       categories,
-      incomeDelta: percentChange(
-        currentTotals.income,
-        previousTotals.income,
-      ),
+      incomeDelta: percentChange(currentTotals.income, previousTotals.income),
       expensesDelta: percentChange(
         currentTotals.expenses,
         previousTotals.expenses,
@@ -250,8 +238,7 @@ export function useOverview() {
     isCurrentMonth: monthOffset === 0,
     goToPreviousMonth: () =>
       setMonthOffset((offset) => Math.max(offset - 1, -MONTHS_BACK)),
-    goToNextMonth: () =>
-      setMonthOffset((offset) => Math.min(offset + 1, 0)),
+    goToNextMonth: () => setMonthOffset((offset) => Math.min(offset + 1, 0)),
     income: derived.currentTotals.income,
     expenses: derived.currentTotals.expenses,
     savingsRate: derived.currentTotals.savingsRate,

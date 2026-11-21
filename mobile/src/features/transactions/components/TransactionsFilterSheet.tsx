@@ -25,7 +25,10 @@ function OptionRow({ label, selected, onPress, colors }: OptionProps) {
       className="flex-row items-center justify-between rounded-xl px-3 py-3 active:opacity-70"
       style={{ backgroundColor: selected ? colors.tile : colors.card }}
     >
-      <Text className="flex-1 pr-2 text-sm" style={{ color: colors.foreground }}>
+      <Text
+        className="flex-1 pr-2 text-sm"
+        style={{ color: colors.foreground }}
+      >
         {label}
       </Text>
       <Ionicons
@@ -91,12 +94,12 @@ function FilterSheetContent({
   };
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      style={{ maxHeight: 460 }}
-      contentContainerStyle={{ paddingBottom: 4 }}
-    >
-      <View className="gap-5">
+    <View style={{ flexShrink: 1, minHeight: 0 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ flexGrow: 0, flexShrink: 1 }}
+        contentContainerStyle={{ gap: 20, paddingBottom: 16 }}
+      >
         <View className="gap-2">
           <SectionLabel label="Período" colors={colors} />
           {PERIOD_OPTIONS.map((option) => (
@@ -147,37 +150,34 @@ function FilterSheetContent({
             />
           ))}
         </View>
+      </ScrollView>
 
-        <View className="flex-row gap-2 pt-1">
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setDraft(DEFAULT_TRANSACTION_FILTERS)}
-            className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
-            style={{ backgroundColor: colors.background }}
+      <View className="flex-row gap-2 pt-3">
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setDraft(DEFAULT_TRANSACTION_FILTERS)}
+          className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
+          style={{ backgroundColor: colors.background }}
+        >
+          <Text className="text-sm font-medium" style={{ color: colors.muted }}>
+            Limpar
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={apply}
+          className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
+          style={{ backgroundColor: colors.accent }}
+        >
+          <Text
+            className="text-sm font-semibold"
+            style={{ color: colors.accentForeground }}
           >
-            <Text
-              className="text-sm font-medium"
-              style={{ color: colors.muted }}
-            >
-              Limpar
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={apply}
-            className="h-11 flex-1 items-center justify-center rounded-xl active:opacity-70"
-            style={{ backgroundColor: colors.accent }}
-          >
-            <Text
-              className="text-sm font-semibold"
-              style={{ color: colors.accentForeground }}
-            >
-              Aplicar filtros
-            </Text>
-          </Pressable>
-        </View>
+            Aplicar filtros
+          </Text>
+        </Pressable>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { InstitutionLogo } from "@/components/ui/InstitutionLogo";
 import { relativeSyncLabel } from "@/lib/dates";
@@ -34,66 +34,72 @@ export function InstitutionBreakdownSheet({
       title="Patrimônio por instituição"
       subtitle={`${relativeSyncLabel(lastSync)} · posição atual dos investimentos`}
     >
-      <View className="rounded-2xl bg-card px-4 py-3">
-        <Text className="text-xs uppercase tracking-wider text-muted">
-          Total investido
-        </Text>
-        <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.8}
-          className="pt-1 text-2xl font-semibold text-foreground"
-        >
-          {formatBRL(total)}
-        </Text>
-      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ flexShrink: 1 }}
+        contentContainerStyle={{ gap: 16 }}
+      >
+        <View className="rounded-2xl bg-card px-4 py-3">
+          <Text className="text-xs uppercase tracking-wider text-muted">
+            Total investido
+          </Text>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+            className="pt-1 text-2xl font-semibold text-foreground"
+          >
+            {formatBRL(total)}
+          </Text>
+        </View>
 
-      <View className="gap-4">
-        {rows.map((row) => (
-          <View key={row.key} className="flex-row items-center">
-            <InstitutionLogo
-              institution={row.logo}
-              name={row.label}
-              size={34}
-            />
+        <View className="gap-4">
+          {rows.map((row) => (
+            <View key={row.key} className="flex-row items-center">
+              <InstitutionLogo
+                institution={row.logo}
+                name={row.label}
+                size={34}
+              />
 
-            <View className="min-w-0 flex-1 pl-3">
-              <View className="flex-row items-center">
-                <Text
-                  numberOfLines={1}
-                  className="min-w-0 flex-1 text-sm font-medium text-foreground"
-                >
-                  {row.label}
-                </Text>
-                <Text className="shrink-0 text-sm font-semibold text-foreground">
-                  {formatBRL(row.balance)}
-                </Text>
-              </View>
+              <View className="min-w-0 flex-1 pl-3">
+                <View className="flex-row items-center">
+                  <Text
+                    numberOfLines={1}
+                    className="min-w-0 flex-1 text-sm font-medium text-foreground"
+                  >
+                    {row.label}
+                  </Text>
+                  <Text className="shrink-0 text-sm font-semibold text-foreground">
+                    {formatBRL(row.balance)}
+                  </Text>
+                </View>
 
-              <View className="mt-1 flex-row items-center">
-                <Text
-                  numberOfLines={1}
-                  className="min-w-0 flex-1 text-xs text-muted"
-                >
-                  {row.count > 0
-                    ? `${row.count} ${row.count === 1 ? "ativo" : "ativos"}`
-                    : "Sem investimentos"}
-                </Text>
-                <Text className="shrink-0 text-xs text-muted">
-                  {Math.round(row.share * 100)}%
-                </Text>
-              </View>
+                <View className="mt-1 flex-row items-center">
+                  <Text
+                    numberOfLines={1}
+                    className="min-w-0 flex-1 text-xs text-muted"
+                  >
+                    {row.count > 0
+                      ? `${row.count} ${row.count === 1 ? "ativo" : "ativos"}`
+                      : "Sem investimentos"}
+                  </Text>
+                  <Text className="shrink-0 text-xs text-muted">
+                    {Math.round(row.share * 100)}%
+                  </Text>
+                </View>
 
-              <View className="mt-2 h-1.5 overflow-hidden rounded-full bg-card">
-                <View
-                  style={{ width: `${Math.round(row.share * 100)}%` }}
-                  className="h-full rounded-full bg-accent"
-                />
+                <View className="mt-2 h-1.5 overflow-hidden rounded-full bg-card">
+                  <View
+                    style={{ width: `${Math.round(row.share * 100)}%` }}
+                    className="h-full rounded-full bg-accent"
+                  />
+                </View>
               </View>
             </View>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      </ScrollView>
     </BottomSheet>
   );
 }

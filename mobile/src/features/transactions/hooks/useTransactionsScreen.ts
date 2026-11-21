@@ -10,10 +10,13 @@ import {
 } from "@/lib/transactionFilters";
 import {
   categoryLabel,
+  findInternalTransferIds,
   groupByDay,
+  isInternalCardPayment,
   normalizeText,
   periodBounds,
   periodLabel,
+  shiftISODate,
   summarizeTransactions,
   typeLabel,
   type TransactionItem,
@@ -99,9 +102,12 @@ export function useTransactionsScreen() {
     () => accounts.map((account) => account.id),
     [accounts],
   );
+  // Fetch a small buffer before the period so a transfer sent on the last day
+  // of the previous month can still be paired with its credit in this period.
+  const fetchFrom = useMemo(() => shiftISODate(bounds.from, -3), [bounds.from]);
   const transactionsQuery = useTransactions({
     accountIds,
-    from: bounds.from,
+    from: fetchFrom,
     to: bounds.to,
   });
 
@@ -110,23 +116,51 @@ export function useTransactionsScreen() {
     [accounts],
   );
 
+  const internalTransferIds = useMemo(
+    () => findInternalTransferIds(transactionsQuery.transactions),
+    [transactionsQuery.transactions],
+  );
+
   const allTransactions = useMemo<TransactionItem[]>(
     () =>
-      transactionsQuery.transactions.map((transaction) => {
-        const account = accountById.get(transaction.accountId);
-        const connection = account
-          ? connectionById.get(account.itemId)
-          : undefined;
+      transactionsQuery.transactions
+        .filter(
+          (transaction) =>
+            transaction.date.slice(0, 10) >= bounds.from &&
+            transaction.date.slice(0, 10) <= bounds.to,
+        )
+        .map((transaction) => {
+          const account = accountById.get(transaction.accountId);
+          const connection = account
+            ? connectionById.get(account.itemId)
+            : undefined;
 
-        return {
-          ...transaction,
-          institution:
-            connection?.displayName ?? account?.institution ?? "Conta",
-          accountName: account?.name ?? "",
-          categoryLabel: categoryLabel(transaction.category),
-        };
-      }),
-    [transactionsQuery.transactions, accountById, connectionById],
+          return {
+            ...transaction,
+            institution:
+              connection?.displayName ?? account?.institution ?? "Conta",
+            accountName: account?.name ?? "",
+            categoryLabel: categoryLabel(transaction.category),
+            isInternalTransfer:
+              internalTransferIds.has(transaction.id) ||
+              isInternalCardPayment(
+                transaction.description,
+                transaction.category,
+              ) ||
+              (account?.kind === "credit" &&
+                normalizeText(transaction.description).includes(
+                  "pagamento recebido",
+                )),
+          };
+        }),
+    [
+      transactionsQuery.transactions,
+      internalTransferIds,
+      bounds.from,
+      bounds.to,
+      accountById,
+      connectionById,
+    ],
   );
 
   const visibleTransactions = useMemo(() => {
@@ -138,6 +172,9 @@ export function useTransactionsScreen() {
           selectedInstitutions.length > 0 &&
           !selectedInstitutions.includes(transaction.institution)
         ) {
+          return false;
+        }
+        if (effectiveFilters.type !== "all" && transaction.isInternalTransfer) {
           return false;
         }
         if (effectiveFilters.type === "income" && transaction.amount <= 0) {

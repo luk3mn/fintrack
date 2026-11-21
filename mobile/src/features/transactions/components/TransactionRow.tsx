@@ -1,11 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { InstitutionLogo } from "@/components/ui/InstitutionLogo";
-import { formatSignedBRL } from "@/lib/money";
-import {
-  transactionIconName,
-  type TransactionItem,
-} from "@/lib/transactions";
+import { formatBRL, formatSignedBRL } from "@/lib/money";
+import { transactionIconKey, type TransactionItem } from "@/lib/transactions";
+import { TransactionIcon } from "./TransactionIcon";
 import type { TransactionColors } from "../theme";
 
 type Props = {
@@ -14,16 +11,13 @@ type Props = {
 };
 
 export function TransactionRow({ item, colors }: Props) {
-  const icon = transactionIconName(item) as keyof typeof Ionicons.glyphMap;
-
   return (
     <View className="flex-row items-center py-4">
-      <View
-        className="h-10 w-10 items-center justify-center rounded-full"
-        style={{ backgroundColor: colors.tile }}
-      >
-        <Ionicons name={icon} size={19} color={colors.accent} />
-      </View>
+      <TransactionIcon
+        name={transactionIconKey(item)}
+        label={item.description || "Transação"}
+        size={40}
+      />
 
       <View className="min-w-0 flex-1 pl-3">
         <Text
@@ -53,7 +47,9 @@ export function TransactionRow({ item, colors }: Props) {
         className="pl-2 text-sm font-medium"
         style={{ color: colors.figure }}
       >
-        {formatSignedBRL(item.amount)}
+        {item.isInternalTransfer
+          ? formatBRL(Math.abs(item.amount))
+          : formatSignedBRL(item.amount)}
       </Text>
     </View>
   );

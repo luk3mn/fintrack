@@ -12,6 +12,25 @@ import type {
   Transaction,
 } from "@/types/domain";
 import { toCents } from "./money";
+import { normalizeText } from "./transactions";
+
+/**
+ * Pluggy can report a card-invoice payment as a CREDIT (the card side of the
+ * movement). From the user's point of view the money leaves the bank account,
+ * so it must always be an expense.
+ */
+function isCardInvoicePayment(description: string) {
+  const value = normalizeText(description);
+
+  return (
+    value.includes("pagamento de fatura") ||
+    value.includes("pagamento da fatura") ||
+    value.includes("pagamento fatura") ||
+    value.includes("fatura de cartao") ||
+    value.includes("fatura do cartao") ||
+    value.includes("pagamento de cartao")
+  );
+}
 
 function toKind(account: PluggyAccount): AccountKind {
   if (account.type === "CREDIT") return "credit";
@@ -35,9 +54,11 @@ export function toAccount(account: PluggyAccount): Account {
 
 export function toTransaction(transaction: PluggyTransaction): Transaction {
   const cents = Math.abs(toCents(transaction.amount));
-  const isDebit = transaction.type
-    ? transaction.type === "DEBIT"
-    : transaction.amount < 0;
+  const isDebit =
+    isCardInvoicePayment(transaction.description) ||
+    (transaction.type
+      ? transaction.type === "DEBIT"
+      : transaction.amount < 0);
 
   return {
     id: transaction.id,
