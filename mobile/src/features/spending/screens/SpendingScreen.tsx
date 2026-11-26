@@ -9,13 +9,18 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AnimatedChip } from "@/components/ui/animated-chip";
 import { Button } from "@/components/ui/Button";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { formatBRL } from "@/lib/money";
-import { spendingRangeLabel } from "@/lib/spending";
+import {
+  SPENDING_GROUPINGS,
+  spendingRangeLabel,
+  type SpendingGrouping,
+} from "@/lib/spending";
 import { useThemeColors } from "@/theme/tokens";
-import { EstablishmentRow } from "../components/EstablishmentRow";
 import { SpendingPeriodFilter } from "../components/SpendingPeriodFilter";
+import { SpendingRow } from "../components/SpendingRow";
 import { useSpendingScreen } from "../hooks/useSpendingScreen";
 
 const TOP_PADDING = 24;
@@ -50,6 +55,8 @@ export function SpendingScreen() {
   const {
     period,
     setPeriod,
+    grouping,
+    setGrouping,
     bounds,
     summary,
     isLoading,
@@ -117,7 +124,10 @@ export function SpendingScreen() {
           </View>
         </View>
         <Text className="pt-3 text-xs text-muted">
-          {spendingRangeLabel(bounds)} · gastos por estabelecimento
+          {spendingRangeLabel(bounds)} ·{" "}
+          {grouping === "category"
+            ? "gastos por categoria"
+            : "gastos por estabelecimento"}
         </Text>
 
         <View className="pt-4">
@@ -139,13 +149,54 @@ export function SpendingScreen() {
             </Text>
             <Text className="pt-1 text-xs text-muted">
               {summary.count}{" "}
-              {summary.count === 1 ? "estabelecimento" : "estabelecimentos"}
+              {grouping === "category"
+                ? summary.count === 1
+                  ? "categoria"
+                  : "categorias"
+                : summary.count === 1
+                  ? "estabelecimento"
+                  : "estabelecimentos"}
             </Text>
           </View>
         </View>
 
         <View className="pt-6">
-          <SectionTitle title="Estabelecimentos" />
+          <AnimatedChip.Group
+            value={grouping}
+            onValueChange={(next) => setGrouping(next as SpendingGrouping)}
+          >
+            {SPENDING_GROUPINGS.map((option) => (
+              <AnimatedChip.Item
+                key={option.key}
+                value={option.key}
+                activeColor={colors.primary}
+                inactiveColor={colors.card}
+              >
+                <AnimatedChip.Icon>
+                  {({ selected }) => (
+                    <Ionicons
+                      name={
+                        option.key === "category"
+                          ? "grid-outline"
+                          : "storefront-outline"
+                      }
+                      size={20}
+                      color={selected ? colors.primaryForeground : colors.muted}
+                    />
+                  )}
+                </AnimatedChip.Icon>
+                <AnimatedChip.Label color={colors.primaryForeground}>
+                  {option.label}
+                </AnimatedChip.Label>
+              </AnimatedChip.Item>
+            ))}
+          </AnimatedChip.Group>
+        </View>
+
+        <View className="pt-6">
+          <SectionTitle
+            title={grouping === "category" ? "Categorias" : "Estabelecimentos"}
+          />
         </View>
 
         {summary.rows.length === 0 ? (
@@ -158,12 +209,19 @@ export function SpendingScreen() {
           <View className="pt-4">
             <View className="gap-5">
               {summary.rows.map((row) => (
-                <EstablishmentRow key={row.key} row={row} max={max} />
+                <SpendingRow
+                  key={row.key}
+                  row={row}
+                  grouping={grouping}
+                  max={max}
+                />
               ))}
             </View>
 
             <Text className="pt-6 text-center text-xs text-subtle">
-              Os nomes vêm da descrição das transações.
+              {grouping === "category"
+                ? "As categorias vêm das transações."
+                : "Os nomes vêm da descrição das transações."}
             </Text>
           </View>
         )}

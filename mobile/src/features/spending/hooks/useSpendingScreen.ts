@@ -3,7 +3,8 @@ import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useTransactions } from "@/features/transactions/hooks/useTransactions";
 import {
   spendingBounds,
-  summarizeSpendingByEstablishment,
+  summarizeSpending,
+  type SpendingGrouping,
   type SpendingPeriod,
 } from "@/lib/spending";
 import { findInternalTransferIds, shiftISODate } from "@/lib/transactions";
@@ -12,6 +13,7 @@ export function useSpendingScreen() {
   const accountsQuery = useAccounts();
   const [today] = useState(() => new Date());
   const [period, setPeriod] = useState<SpendingPeriod>("month");
+  const [grouping, setGrouping] = useState<SpendingGrouping>("establishment");
 
   const bounds = useMemo(() => spendingBounds(period, today), [period, today]);
 
@@ -40,12 +42,13 @@ export function useSpendingScreen() {
 
   const summary = useMemo(
     () =>
-      summarizeSpendingByEstablishment(
+      summarizeSpending(
         transactionsQuery.transactions,
         internalIds,
         bounds,
+        grouping,
       ),
-    [transactionsQuery.transactions, internalIds, bounds],
+    [transactionsQuery.transactions, internalIds, bounds, grouping],
   );
 
   const refetch = async () => {
@@ -55,6 +58,8 @@ export function useSpendingScreen() {
   return {
     period,
     setPeriod,
+    grouping,
+    setGrouping,
     bounds,
     summary,
     isLoading: accountsQuery.isLoading || transactionsQuery.isLoading,

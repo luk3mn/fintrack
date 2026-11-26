@@ -1,0 +1,15 @@
+{
+  "$schema": "https://reacticx.com/schema/component.config.json",
+  "outDir": "src/components/ui",
+  "structure": "flat",
+  "aliases": {
+    "components": "@/components/ui",
+    "utils": "@/lib"
+  },
+  "paths": {
+    "utils": "src/lib",
+    "hooks": "src/hooks"
+  },
+  "packageManager": "npm",
+  "installDependencies": "never"
+}

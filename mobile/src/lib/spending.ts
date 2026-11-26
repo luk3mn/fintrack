@@ -10,6 +10,16 @@ export const SPENDING_PERIODS: { key: SpendingPeriod; label: string }[] = [
   { key: "year", label: "Ano" },
 ];
 
+export type SpendingGrouping = "establishment" | "category";
+
+export const SPENDING_GROUPINGS: {
+  key: SpendingGrouping;
+  label: string;
+}[] = [
+  { key: "establishment", label: "Estabelecimentos" },
+  { key: "category", label: "Categorias" },
+];
+
 export type DateBounds = { from: string; to: string };
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -77,7 +87,7 @@ export function establishmentName(description?: string | null) {
   return value.replace(/^[\s\-:;*·|]+/, "").trim();
 }
 
-export type EstablishmentSpending = {
+export type SpendingRow = {
   key: string;
   name: string;
   total: Cents;
@@ -90,7 +100,7 @@ export type EstablishmentSpending = {
 export type SpendingSummary = {
   total: Cents;
   count: number;
-  rows: EstablishmentSpending[];
+  rows: SpendingRow[];
 };
 
 type Group = {
@@ -102,14 +112,15 @@ type Group = {
 };
 
 /**
- * Sums real debits by establishment, sorted from the largest to the smallest.
- * Internal transfers and card-invoice mirrors are excluded, so the total
- * matches the expenses shown elsewhere in the app.
+ * Sums real debits by establishment or category, sorted from the largest to
+ * the smallest. Internal transfers and card-invoice mirrors are excluded, so
+ * the total matches the expenses shown elsewhere in the app.
  */
-export function summarizeSpendingByEstablishment(
+export function summarizeSpending(
   transactions: Transaction[],
   internalIds: Set<string>,
   bounds: DateBounds,
+  grouping: SpendingGrouping = "establishment",
 ): SpendingSummary {
   const groups = new Map<string, Group>();
 
@@ -125,7 +136,10 @@ export function summarizeSpendingByEstablishment(
     const category = transaction.category?.trim()
       ? categoryLabel(transaction.category)
       : "Outros";
-    const name = establishmentName(transaction.description) || category;
+    const name =
+      grouping === "category"
+        ? category
+        : establishmentName(transaction.description) || category;
     const key = normalizeText(name) || "outros";
 
     const group = groups.get(key) ?? {
