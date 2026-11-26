@@ -25,6 +25,11 @@ export type AppBottomSheetProps = {
   footer?: ReactNode;
   contentPadding?: AppBottomSheetContentPadding;
   containerColor?: ColorValue;
+  /**
+   * Caps the sheet height (points or a percentage of the window). Content
+   * taller than this scrolls inside the sheet. Defaults to `88%`.
+   */
+  maxHeight?: string | number;
   /** Allow closing by tapping the backdrop. Defaults to `true`. */
   dismissOnBackdrop?: boolean;
 };
@@ -72,6 +77,7 @@ export function AppBottomSheet({
   footer,
   contentPadding,
   containerColor,
+  maxHeight = "88%",
   dismissOnBackdrop = true,
 }: AppBottomSheetProps) {
   const colors = useThemeColors();
@@ -101,7 +107,7 @@ export function AppBottomSheet({
     <Sheet
       ref={sheetRef}
       enableDynamicSizing
-      maxDynamicContentSize="88%"
+      maxDynamicContentSize={maxHeight}
       onClose={handleClose}
       dismissOnBackdropPress={dismissOnBackdrop}
       backgroundColor={

@@ -5,6 +5,7 @@ import { fetchPeriodTransactions } from "@/api/transactions";
 import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useItems } from "@/features/accounts/hooks/useItems";
 import { categoryLabel } from "@/lib/categories";
+import { withDisplayNames } from "@/lib/connections";
 import {
   findInternalTransferIds,
   isInternalCardPayment,
@@ -23,6 +24,8 @@ export type OverviewFlows = {
   income: Cents;
   expenses: Cents;
   savingsRate?: number;
+  /** Exactly the positive transactions summed into `income`. */
+  incomeTransactions: Transaction[];
 };
 
 const ORDER: Record<AccountKind, number> = {
@@ -56,6 +59,7 @@ function totals(
 ): OverviewFlows {
   let income = 0;
   let expenses = 0;
+  const incomeTransactions: Transaction[] = [];
 
   for (const transaction of transactions) {
     if (
@@ -64,14 +68,19 @@ function totals(
     ) {
       continue;
     }
-    if (transaction.amount > 0) income += transaction.amount;
-    else expenses += -transaction.amount;
+    if (transaction.amount > 0) {
+      income += transaction.amount;
+      incomeTransactions.push(transaction);
+    } else {
+      expenses += -transaction.amount;
+    }
   }
 
   return {
     income,
     expenses,
     savingsRate: income > 0 ? ((income - expenses) / income) * 100 : undefined,
+    incomeTransactions,
   };
 }
 
@@ -99,6 +108,11 @@ export function useOverview() {
   );
 
   const summary = useMemo(() => summarizeAccounts(accounts), [accounts]);
+
+  const connections = useMemo(
+    () => withDisplayNames(itemsQuery.data ?? []),
+    [itemsQuery.data],
+  );
 
   const cashAccounts = useMemo(
     () => accounts.filter((account) => account.kind !== "credit"),
@@ -231,6 +245,7 @@ export function useOverview() {
 
   return {
     accounts,
+    connections,
     summary,
     monthLabel,
     canGoNext: monthOffset < 0,
@@ -240,6 +255,7 @@ export function useOverview() {
       setMonthOffset((offset) => Math.max(offset - 1, -MONTHS_BACK)),
     goToNextMonth: () => setMonthOffset((offset) => Math.min(offset + 1, 0)),
     income: derived.currentTotals.income,
+    incomeTransactions: derived.currentTotals.incomeTransactions,
     expenses: derived.currentTotals.expenses,
     savingsRate: derived.currentTotals.savingsRate,
     incomeDelta: derived.incomeDelta,

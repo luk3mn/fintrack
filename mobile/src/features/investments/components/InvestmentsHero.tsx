@@ -1,6 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
-import { formatBRL, formatSignedBRL } from "@/lib/money";
 import type { InvestmentSummary } from "@/lib/investments";
+import { formatBRL, formatSignedBRL } from "@/lib/money";
+import { useThemeColors } from "@/theme/tokens";
 
 type Props = {
   summary: InvestmentSummary;
@@ -8,6 +10,7 @@ type Props = {
 };
 
 export function InvestmentsHero({ summary, onPress }: Props) {
+  const colors = useThemeColors();
   const hasProfit = summary.profit !== 0;
   const profitLabel = hasProfit ? formatSignedBRL(summary.profit) : "—";
   const arrow = summary.profit >= 0 ? "↗" : "↘";
@@ -25,7 +28,11 @@ export function InvestmentsHero({ summary, onPress }: Props) {
         <Text className="text-xs uppercase tracking-wider text-soft">
           Patrimônio investido
         </Text>
-        <Text className="text-xs text-soft">por banco ›</Text>
+        <Ionicons
+          name="arrow-up-right-box-outline"
+          size={20}
+          color={colors.soft}
+        />
       </View>
 
       <Text

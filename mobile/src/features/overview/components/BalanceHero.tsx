@@ -1,17 +1,36 @@
-import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, Text, View } from "react-native";
 import { formatBRL } from "@/lib/money";
 import type { Summary } from "@/lib/summary";
+import { useThemeColors } from "@/theme/tokens";
 
 type Props = {
   summary: Summary;
+  onPress: () => void;
 };
 
-export function BalanceHero({ summary }: Props) {
+export function BalanceHero({ summary, onPress }: Props) {
+  const colors = useThemeColors();
+
   return (
-    <View className="rounded-3xl bg-hero px-4 pb-4 pt-5">
-      <Text className="text-xs font-medium uppercase tracking-wider text-soft">
-        Saldo em contas
-      </Text>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Ver saldo por instituição"
+      accessibilityHint="Abre o detalhamento por banco e conta"
+      style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+      className="rounded-3xl bg-hero px-4 pb-4 pt-5"
+    >
+      <View className="flex-row items-center justify-between gap-2">
+        <Text className="text-xs font-medium uppercase tracking-wider text-soft">
+          Saldo em contas
+        </Text>
+        <Ionicons
+          name="arrow-up-right-box-outline"
+          size={20}
+          color={colors.soft}
+        />
+      </View>
 
       <Text
         numberOfLines={1}
@@ -39,6 +58,6 @@ export function BalanceHero({ summary }: Props) {
           </Text>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }

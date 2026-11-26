@@ -53,6 +53,16 @@ export function maturityDateLabel(date?: Date) {
   return `${day} ${MONTHS[date.getUTCMonth()]}`;
 }
 
+/** Short label for an ISO date (YYYY-MM-DD), e.g. "12 nov". */
+export function shortDateLabel(iso?: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (!isValidDate(date)) return "";
+
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${day} ${MONTHS[date.getUTCMonth()].toLowerCase()}`;
+}
+
 export function connectionUpdatedLabel(date?: Date) {
   if (!date || !isValidDate(date)) return "Nunca atualizado";
 
