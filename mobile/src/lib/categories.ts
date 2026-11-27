@@ -56,3 +56,32 @@ export function categoryLabel(category?: string | null) {
   if (!raw) return "Transação";
   return CATEGORY_LABELS[raw.toLowerCase()] ?? raw;
 }
+
+const NON_SPENDING_CATEGORIES = new Set([
+  "Transação",
+  "Salário",
+  "Receitas",
+  "Rendimentos",
+  "Investimentos",
+  "Renda fixa",
+  "Fundos de investimento",
+  "Aplicação automática",
+  "Pagamento de fatura",
+  "Transferência entre contas",
+  "Transferência Pix",
+  "Transferência TED",
+  "Transferência DOC",
+  "Transferência por boleto",
+  "Transferência em dinheiro",
+  "Transferência por cheque",
+  "Transferência internacional",
+  "Transferências",
+  "Transferências para terceiros",
+]);
+
+/** Labels offered when the user assigns a category to an establishment. */
+export const SPENDING_CATEGORY_OPTIONS = [
+  ...new Set(Object.values(CATEGORY_LABELS)),
+]
+  .filter((label) => !NON_SPENDING_CATEGORIES.has(label))
+  .sort((a, b) => a.localeCompare(b, "pt-BR"));

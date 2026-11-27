@@ -1,5 +1,9 @@
 import type { Cents, Transaction } from "@/types/domain";
 import { categoryLabel } from "./categories";
+import {
+  categoryForEstablishment,
+  type SpendingCategoryRule,
+} from "./spendingRules";
 import { isInternalCardPayment, normalizeText } from "./transactions";
 
 export type SpendingPeriod = "week" | "month" | "year";
@@ -93,6 +97,8 @@ export type SpendingRow = {
   total: Cents;
   count: number;
   category: string;
+  /** True when the category came from a user-defined rule. */
+  customCategory: boolean;
   lastDate: string;
   share: number;
 };
@@ -108,6 +114,7 @@ type Group = {
   total: Cents;
   count: number;
   categories: Map<string, number>;
+  customCategory: boolean;
   lastDate: string;
 };
 
@@ -121,6 +128,7 @@ export function summarizeSpending(
   internalIds: Set<string>,
   bounds: DateBounds,
   grouping: SpendingGrouping = "establishment",
+  rules: SpendingCategoryRule[] = [],
 ): SpendingSummary {
   const groups = new Map<string, Group>();
 
@@ -133,13 +141,18 @@ export function summarizeSpending(
       continue;
     }
 
-    const category = transaction.category?.trim()
-      ? categoryLabel(transaction.category)
-      : "Outros";
-    const name =
-      grouping === "category"
-        ? category
-        : establishmentName(transaction.description) || category;
+    const establishment =
+      establishmentName(transaction.description) ||
+      (transaction.category?.trim()
+        ? categoryLabel(transaction.category)
+        : "Outros");
+    const ruleCategory = categoryForEstablishment(establishment, rules);
+    const category =
+      ruleCategory ??
+      (transaction.category?.trim()
+        ? categoryLabel(transaction.category)
+        : "Outros");
+    const name = grouping === "category" ? category : establishment;
     const key = normalizeText(name) || "outros";
 
     const group = groups.get(key) ?? {
@@ -147,6 +160,7 @@ export function summarizeSpending(
       total: 0,
       count: 0,
       categories: new Map<string, number>(),
+      customCategory: Boolean(ruleCategory),
       lastDate: date,
     };
 
@@ -166,6 +180,7 @@ export function summarizeSpending(
       category:
         [...group.categories.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ??
         "Outros",
+      customCategory: group.customCategory,
       lastDate: group.lastDate,
       share: 0,
     }))

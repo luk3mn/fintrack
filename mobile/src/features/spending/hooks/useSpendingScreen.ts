@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useTransactions } from "@/features/transactions/hooks/useTransactions";
 import {
@@ -7,6 +7,13 @@ import {
   type SpendingGrouping,
   type SpendingPeriod,
 } from "@/lib/spending";
+import {
+  loadSpendingCategoryRules,
+  removeSpendingCategoryRule,
+  saveSpendingCategoryRules,
+  upsertSpendingCategoryRule,
+  type SpendingCategoryRule,
+} from "@/lib/spendingRules";
 import { findInternalTransferIds, shiftISODate } from "@/lib/transactions";
 
 export function useSpendingScreen() {
@@ -14,6 +21,17 @@ export function useSpendingScreen() {
   const [today] = useState(() => new Date());
   const [period, setPeriod] = useState<SpendingPeriod>("month");
   const [grouping, setGrouping] = useState<SpendingGrouping>("establishment");
+  const [rules, setRules] = useState<SpendingCategoryRule[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    loadSpendingCategoryRules().then((saved) => {
+      if (active) setRules(saved);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const bounds = useMemo(() => spendingBounds(period, today), [period, today]);
 
@@ -47,8 +65,25 @@ export function useSpendingScreen() {
         internalIds,
         bounds,
         grouping,
+        rules,
       ),
-    [transactionsQuery.transactions, internalIds, bounds, grouping],
+    [transactionsQuery.transactions, internalIds, bounds, grouping, rules],
+  );
+
+  const updateRules = useCallback((next: SpendingCategoryRule[]) => {
+    setRules(next);
+    void saveSpendingCategoryRules(next);
+  }, []);
+
+  const setCategoryForEstablishment = useCallback(
+    (name: string, category: string) =>
+      updateRules(upsertSpendingCategoryRule(rules, name, category)),
+    [rules, updateRules],
+  );
+
+  const removeCategoryForEstablishment = useCallback(
+    (name: string) => updateRules(removeSpendingCategoryRule(rules, name)),
+    [rules, updateRules],
   );
 
   const refetch = async () => {
@@ -62,6 +97,8 @@ export function useSpendingScreen() {
     setGrouping,
     bounds,
     summary,
+    setCategoryForEstablishment,
+    removeCategoryForEstablishment,
     isLoading: accountsQuery.isLoading || transactionsQuery.isLoading,
     isError: accountsQuery.isError || transactionsQuery.isError,
     isRefetching: accountsQuery.isRefetching || transactionsQuery.isRefetching,

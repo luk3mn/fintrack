@@ -185,6 +185,47 @@ export function isSelfTransferCategory(category?: string | null) {
 }
 
 /**
+ * Extracts the counterpart name from a transfer description (e.g.
+ * "Transferência enviada pelo Pix|LUCAS RENAN MAUES NUNES" -> the name only).
+ * Pluggy's boilerplate and CPF/CNPJ prefixes are real fields in the feed, so
+ * this only strips known wrapping — it never invents a name.
+ */
+function transferCounterpart(description?: string | null) {
+  let value = normalizeText(description ?? "");
+  if (!value) return "";
+
+  value = value
+    .replace(
+      /^(?:pix\s+(?:enviado|recebido)|transferencia\s+(?:enviada|recebida)(?:\s+pelo\s+pix)?|transferencia|transfer|ted|doc)\s*(?:\||-|:)?\s*/,
+      "",
+    )
+    .replace(/^(?:cpf|cnpj)\s*:?\s*/, "")
+    .replace(/^\d{2,3}\.\d{3}\.\d{3}(?:-\d{2})?\s*/, "")
+    .replace(/^[\s\-:;*·|]+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return value;
+}
+
+/**
+ * Names that Pluggy itself identified as the same person. They let us exclude
+ * a self-transfer even when only one leg is connected, the amounts differ by a
+ * fee, or the dates are too far apart to pair.
+ */
+function selfTransferCounterparts(transactions: Transaction[]) {
+  const names = new Set<string>();
+
+  for (const transaction of transactions) {
+    if (!isSelfTransferCategory(transaction.category)) continue;
+    const name = transferCounterpart(transaction.description);
+    if (name.length >= 8) names.add(name);
+  }
+
+  return names;
+}
+
+/**
  * Finds movements that only shuffle money between the user's own accounts, so
  * they must not count as income or expenses.
  *
@@ -192,16 +233,26 @@ export function isSelfTransferCategory(category?: string | null) {
  * amount in a different account of the user, a couple of days apart. This
  * catches the common PJ -> PF monthly transfer even when Pluggy labels both
  * sides only as "Transfers"/"Pix". When Pluggy already says it is a same-person
- * transfer, a small fee/rounding difference is tolerated.
+ * transfer, a small fee/rounding difference is tolerated. Transfers whose
+ * counterpart is a name Pluggy already flagged as the same person are also
+ * excluded even when the other leg is missing.
  */
 export function findInternalTransferIds(
   transactions: Transaction[],
   maxDays = 2,
 ): Set<string> {
   const internal = new Set<string>();
+  const selfCounterparts = selfTransferCounterparts(transactions);
 
   for (const transaction of transactions) {
     if (isSelfTransferCategory(transaction.category)) {
+      internal.add(transaction.id);
+      continue;
+    }
+    if (!isTransferLike(transaction)) continue;
+
+    const counterpart = transferCounterpart(transaction.description);
+    if (counterpart && selfCounterparts.has(counterpart)) {
       internal.add(transaction.id);
     }
   }

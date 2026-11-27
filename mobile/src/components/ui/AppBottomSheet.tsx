@@ -84,21 +84,34 @@ export function AppBottomSheet({
   const insets = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheetMethods>(null);
   const wasVisible = useRef(false);
+  // When the parent drives `visible` to false, it already knows the sheet is
+  // closing. The late `onClose` from the animation must not call `onDismiss`
+  // again — it could clear a new selection made while the sheet animates out.
+  const programmaticClose = useRef(false);
   const padding = resolveContentPadding(contentPadding, insets.bottom);
   const hasHeader = Boolean(header || title || subtitle);
   const footerBottomPadding = Math.max(0, padding.bottom - insets.bottom);
 
   const handleClose = useCallback(() => {
     wasVisible.current = false;
+    // Only ignore the late callback from a close the parent itself requested.
+    // User-initiated closes (back button, backdrop, swipe) must always notify
+    // the parent, otherwise `visible` stays true and the sheet never reopens.
+    if (programmaticClose.current) {
+      programmaticClose.current = false;
+      return;
+    }
     onDismiss();
   }, [onDismiss]);
 
   useEffect(() => {
     if (visible) {
       wasVisible.current = true;
+      programmaticClose.current = false;
       sheetRef.current?.snapToIndex(0);
     } else if (wasVisible.current) {
       wasVisible.current = false;
+      programmaticClose.current = true;
       sheetRef.current?.close();
     }
   }, [visible]);

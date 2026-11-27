@@ -10,7 +10,7 @@ import React, {
   useRef,
   useState,
   type ReactElement,
-} from "react"
+} from "react";
 import {
   Modal,
   Pressable,
@@ -19,12 +19,12 @@ import {
   View,
   type ScrollViewProps,
   type ViewStyle,
-} from "react-native"
+} from "react-native";
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-} from "react-native-gesture-handler"
+} from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -34,18 +34,18 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-} from "react-native-reanimated"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { scheduleOnRN } from "react-native-worklets"
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { scheduleOnRN } from "react-native-worklets";
 
 import {
   DEFAULT_SPRING_CONFIG,
   DEFAULT_TIMING_CONFIG,
   HANDLE_HEIGHT,
   SCROLL_TOP_THRESHOLD,
-} from "./conf"
-import type { BottomSheetMethods, BottomSheetProps } from "./types"
-import { isScrollableList, parseSnapPoint, triggerHaptic } from "./utils"
+} from "./conf";
+import type { BottomSheetMethods, BottomSheetProps } from "./types";
+import { isScrollableList, parseSnapPoint, triggerHaptic } from "./utils";
 
 const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
   (
@@ -74,149 +74,180 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
       contentContainerStyle,
       contentScrollEnabled = true,
     },
-    ref
+    ref,
   ) => {
     // Read on every render, so rotation, split screen and a new status bar
     // height move the sheet instead of a size frozen at import time.
-    const { height: windowHeight } = useWindowDimensions()
-    const insets = useSafeAreaInsets()
-    const handleHeight = showHandle ? HANDLE_HEIGHT : 0
+    const { height: windowHeight } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
+    const handleHeight = showHandle ? HANDLE_HEIGHT : 0;
 
     // Dynamic sizing: the content's laid-out height (bottom safe-area spacer
     // included), null until the sheet has been laid out once.
-    const [contentHeight, setContentHeight] = useState<number | null>(null)
-    const [footerHeight, setFooterHeight] = useState(0)
+    const [contentHeight, setContentHeight] = useState<number | null>(null);
+    const [footerHeight, setFooterHeight] = useState(0);
     const maxDynamicSize = Math.min(
       parseSnapPoint(
         maxDynamicContentSize ?? windowHeight - insets.top,
-        windowHeight
+        windowHeight,
       ),
-      windowHeight - insets.top
-    )
+      windowHeight - insets.top,
+    );
     const dynamicSnapPoint = Math.min(
       maxDynamicSize,
-      (contentHeight ?? maxDynamicSize) + footerHeight + handleHeight
-    )
+      (contentHeight ?? maxDynamicSize) + footerHeight + handleHeight,
+    );
     // Wait only for the content; the footer height arrives right after and the
     // re-snap effect below adjusts the sheet if it was measured after opening.
-    const sizeReady = !enableDynamicSizing || contentHeight !== null
+    const sizeReady = !enableDynamicSizing || contentHeight !== null;
     const handleContentSizeChange = useCallback(
       (_width: number, height: number) => setContentHeight(Math.ceil(height)),
-      []
-    )
+      [],
+    );
     const handleFooterLayout = useCallback(
       (height: number) => setFooterHeight(Math.ceil(height)),
-      []
-    )
+      [],
+    );
 
     // Value equality: callers pass a fresh array every render (`snapPoints={["68%"]}`).
     // Depending on the array reference recreates the pan gesture and delays the next tap.
     const snapPointsKey = enableDynamicSizing
       ? String(dynamicSnapPoint)
-      : (snapPoints ?? []).map(String).join("|")
-    const snapPointsRef = useRef(snapPoints)
-    snapPointsRef.current = snapPoints
+      : (snapPoints ?? []).map(String).join("|");
+    const snapPointsRef = useRef(snapPoints);
+    snapPointsRef.current = snapPoints;
     const parsedSnapPoints = useMemo(
       () =>
         enableDynamicSizing
           ? [dynamicSnapPoint]
           : (snapPointsRef.current ?? []).map((point) =>
-              parseSnapPoint(point, windowHeight)
+              parseSnapPoint(point, windowHeight),
             ),
       // `snapPointsKey` is a value-based trigger: the array itself lives in a
       // ref, so callers may pass a fresh array on every render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [dynamicSnapPoint, enableDynamicSizing, snapPointsKey, windowHeight]
-    )
+      [dynamicSnapPoint, enableDynamicSizing, snapPointsKey, windowHeight],
+    );
     const maxSnapPoint = useMemo(
       () => Math.max(...parsedSnapPoints),
-      [parsedSnapPoints]
-    )
+      [parsedSnapPoints],
+    );
     const minSnapPoint = useMemo(
       () => Math.min(...parsedSnapPoints),
-      [parsedSnapPoints]
-    )
-    const maxSnapIndex = parsedSnapPoints.length - 1
+      [parsedSnapPoints],
+    );
+    const maxSnapIndex = parsedSnapPoints.length - 1;
 
-    const translateY = useSharedValue(windowHeight)
-    const currentSnapIndex = useSharedValue(-1)
-    const context = useSharedValue(0)
-    const scrollY = useSharedValue(0)
-    const scrollViewRef = useAnimatedRef<Animated.ScrollView>()
-    const isDraggingSheet = useSharedValue(false)
-    const gestureStartScrollY = useSharedValue(0)
+    const translateY = useSharedValue(windowHeight);
+    const currentSnapIndex = useSharedValue(-1);
+    const context = useSharedValue(0);
+    const scrollY = useSharedValue(0);
+    const isClosing = useSharedValue(false);
+    const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+    const isDraggingSheet = useSharedValue(false);
+    const gestureStartScrollY = useSharedValue(0);
     const [enableScroll, setEnableScroll] = useState(
-      () => parsedSnapPoints.length === 1
-    )
-    const [modalVisible, setModalVisible] = useState(false)
-    const pendingSnapIndex = useRef<number | null>(null)
-    const onSnapPointChangeRef = useRef(onSnapPointChange)
-    const onCloseRef = useRef(onClose)
-    onSnapPointChangeRef.current = onSnapPointChange
-    onCloseRef.current = onClose
+      () => parsedSnapPoints.length === 1,
+    );
+    const [modalVisible, setModalVisible] = useState(false);
+    const pendingSnapIndex = useRef<number | null>(null);
+    const closeHandledRef = useRef(false);
+    const closeFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const onSnapPointChangeRef = useRef(onSnapPointChange);
+    const onCloseRef = useRef(onClose);
+    onSnapPointChangeRef.current = onSnapPointChange;
+    onCloseRef.current = onClose;
+
+    const clearCloseFallback = useCallback(() => {
+      if (closeFallbackRef.current !== null) {
+        clearTimeout(closeFallbackRef.current);
+        closeFallbackRef.current = null;
+      }
+    }, []);
 
     const handleSnapPointChangeJS = useCallback(
       (index: number) => {
-        if (enableHapticFeedback) triggerHaptic()
-        onSnapPointChangeRef.current?.(index)
+        if (enableHapticFeedback) triggerHaptic();
+        onSnapPointChangeRef.current?.(index);
       },
-      [enableHapticFeedback]
-    )
+      [enableHapticFeedback],
+    );
 
     const handleCloseJS = useCallback(() => {
-      if (enableHapticFeedback) triggerHaptic()
-      onCloseRef.current?.()
-    }, [enableHapticFeedback])
+      if (enableHapticFeedback) triggerHaptic();
+      onCloseRef.current?.();
+    }, [enableHapticFeedback]);
 
+    // Runs on the RN thread. Guarded so the animation callback and the safety
+    // timeout can never notify the caller twice.
     const hideModalJS = useCallback(() => {
-      setModalVisible(false)
-      handleCloseJS()
-    }, [handleCloseJS])
+      if (closeHandledRef.current) return;
+      closeHandledRef.current = true;
+      clearCloseFallback();
+      isClosing.value = false;
+      setModalVisible(false);
+      handleCloseJS();
+    }, [handleCloseJS, clearCloseFallback, isClosing]);
+
+    const scheduleCloseFallback = useCallback(() => {
+      clearCloseFallback();
+      closeFallbackRef.current = setTimeout(
+        () => {
+          hideModalJS();
+        },
+        (DEFAULT_TIMING_CONFIG.duration ?? 280) + 200,
+      );
+    }, [clearCloseFallback, hideModalJS]);
+
+    useEffect(() => clearCloseFallback, [clearCloseFallback]);
 
     const updateScrollEnabled = useCallback((enabled: boolean) => {
-      setEnableScroll(enabled)
-    }, [])
+      setEnableScroll(enabled);
+    }, []);
 
     const findClosestSnapPoint = useCallback(
       (currentY: number, velocity: number): number => {
-        "worklet"
-        const height = windowHeight - currentY
+        "worklet";
+        const height = windowHeight - currentY;
         if (Math.abs(velocity) > snapVelocityThreshold) {
-          const direction = velocity > 0 ? -1 : 1
-          const nextIndex = currentSnapIndex.value + direction
+          const direction = velocity > 0 ? -1 : 1;
+          const nextIndex = currentSnapIndex.value + direction;
           if (nextIndex >= 0 && nextIndex < parsedSnapPoints.length) {
-            return nextIndex
+            return nextIndex;
           }
         }
-        let closestIndex = 0
-        let minDistance = Math.abs(height - parsedSnapPoints[0])
+        let closestIndex = 0;
+        let minDistance = Math.abs(height - parsedSnapPoints[0]);
         for (let i = 1; i < parsedSnapPoints.length; i++) {
-          const distance = Math.abs(height - parsedSnapPoints[i])
+          const distance = Math.abs(height - parsedSnapPoints[i]);
           if (distance < minDistance) {
-            minDistance = distance
-            closestIndex = i
+            minDistance = distance;
+            closestIndex = i;
           }
         }
-        return closestIndex
+        return closestIndex;
       },
-      [parsedSnapPoints, snapVelocityThreshold, currentSnapIndex, windowHeight]
-    )
+      [parsedSnapPoints, snapVelocityThreshold, currentSnapIndex, windowHeight],
+    );
 
     const snapToPoint = useCallback(
       (index: number, animated = true) => {
-        "worklet"
-        if (index < 0 || index >= parsedSnapPoints.length) return
-        const targetY = windowHeight - parsedSnapPoints[index]
+        "worklet";
+        // A re-snap must never fight the closing animation: that could cancel
+        // it and leave the transparent Modal mounted over the app.
+        if (isClosing.value) return;
+        if (index < 0 || index >= parsedSnapPoints.length) return;
+        const targetY = windowHeight - parsedSnapPoints[index];
         translateY.value = animated
           ? withSpring(targetY, springConfig)
-          : targetY
-        currentSnapIndex.value = index
-        const shouldEnableScroll = index === maxSnapIndex
-        scheduleOnRN(updateScrollEnabled, shouldEnableScroll)
+          : targetY;
+        currentSnapIndex.value = index;
+        const shouldEnableScroll = index === maxSnapIndex;
+        scheduleOnRN(updateScrollEnabled, shouldEnableScroll);
         // Always schedule the stable JS callback. It reads onSnapPointChange
         // from a ref, so this worklet does not depend on the prop identity —
         // a new callback from the parent must not rebuild the pan gesture.
-        scheduleOnRN(handleSnapPointChangeJS, index)
+        scheduleOnRN(handleSnapPointChangeJS, index);
       },
       [
         parsedSnapPoints,
@@ -227,74 +258,99 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
         handleSnapPointChangeJS,
         updateScrollEnabled,
         windowHeight,
-      ]
-    )
+        isClosing,
+      ],
+    );
 
     const presentAtIndex = useCallback(
       (index: number) => {
-        pendingSnapIndex.current = index
+        closeHandledRef.current = false;
+        clearCloseFallback();
+        isClosing.value = false;
+        pendingSnapIndex.current = index;
         if (modalVisible) {
-          snapToPoint(index, true)
-          pendingSnapIndex.current = null
-          return
+          snapToPoint(index, true);
+          pendingSnapIndex.current = null;
+          return;
         }
         // Start below the current window, which may have changed while hidden.
-        translateY.value = windowHeight
-        setModalVisible(true)
+        translateY.value = windowHeight;
+        setModalVisible(true);
       },
-      [modalVisible, snapToPoint, translateY, windowHeight]
-    )
+      [
+        modalVisible,
+        snapToPoint,
+        translateY,
+        windowHeight,
+        clearCloseFallback,
+        isClosing,
+      ],
+    );
 
     // With dynamic sizing, wait for the first measurement of the content
     // (it only mounts once the Modal is visible) before sliding up.
+    // Snap synchronously in the effect: a requestAnimationFrame here is
+    // cancelled by the re-render that follows the Modal mount/content
+    // measurement, leaving the sheet parked below the screen with the Modal
+    // still mounted (and swallowing every tap underneath it).
     useEffect(() => {
       if (!modalVisible || !sizeReady || pendingSnapIndex.current === null)
-        return
-      const index = pendingSnapIndex.current
-      pendingSnapIndex.current = null
-      const frame = requestAnimationFrame(() => {
-        snapToPoint(index, true)
-      })
-      return () => cancelAnimationFrame(frame)
-    }, [modalVisible, sizeReady, snapToPoint])
+        return;
+      const index = pendingSnapIndex.current;
+      pendingSnapIndex.current = null;
+      snapToPoint(index, true);
+    }, [modalVisible, sizeReady, snapToPoint]);
 
     // Snap points that change while the sheet is open (content refetched,
     // font scale, window resized) move it to the new height.
     useEffect(() => {
-      const index = currentSnapIndex.value
-      if (!modalVisible || index < 0 || isDraggingSheet.value) return
-      const target = Math.min(index, parsedSnapPoints.length - 1)
-      translateY.value = withSpring(
-        windowHeight - parsedSnapPoints[target],
-        springConfig
+      const index = currentSnapIndex.value;
+      if (
+        !modalVisible ||
+        isClosing.value ||
+        index < 0 ||
+        isDraggingSheet.value
       )
+        return;
+      const target = Math.min(index, parsedSnapPoints.length - 1);
+      const targetY = windowHeight - parsedSnapPoints[target];
+      // Dynamic sizing re-measures on every frame while the sheet moves. Ignore
+      // sub-point noise, otherwise each measurement restarts the spring and the
+      // animation never settles (which also delays/interrupts close animations).
+      if (Math.abs(translateY.value - targetY) < 2) return;
+      translateY.value = withSpring(targetY, springConfig);
     }, [
       parsedSnapPoints,
       windowHeight,
       modalVisible,
       currentSnapIndex,
       isDraggingSheet,
+      isClosing,
       translateY,
       springConfig,
-    ])
+    ]);
 
     const closeSheet = useCallback(() => {
-      "worklet"
-      scheduleOnRN(updateScrollEnabled, false)
+      "worklet";
+      isClosing.value = true;
+      // If the animation callback is lost (re-measure, re-render, interrupted
+      // gesture), still unmount the Modal so it can't swallow taps.
+      scheduleOnRN(scheduleCloseFallback);
+      scheduleOnRN(updateScrollEnabled, false);
       // Mark it closed now, so the re-snap above can't reopen it mid-animation.
-      currentSnapIndex.value = -1
+      currentSnapIndex.value = -1;
       translateY.value = withTiming(
         windowHeight,
         DEFAULT_TIMING_CONFIG,
         (finished) => {
           if (finished) {
-            scrollY.value = 0
+            scrollY.value = 0;
             // Avoid scrollTo on an unbound animated ref (FlatList child path).
             // Modal unmount resets ScrollView offset on the next open.
-            scheduleOnRN(hideModalJS)
+            scheduleOnRN(hideModalJS);
           }
-        }
-      )
+        },
+      );
     }, [
       translateY,
       hideModalJS,
@@ -302,51 +358,53 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
       updateScrollEnabled,
       currentSnapIndex,
       windowHeight,
-    ])
+      isClosing,
+      scheduleCloseFallback,
+    ]);
 
     const onScroll = useAnimatedScrollHandler({
       onScroll: (event) => {
-        scrollY.value = event.contentOffset.y
+        scrollY.value = event.contentOffset.y;
       },
-    })
+    });
 
     const handlePanGesture = useMemo(
       () =>
         Gesture.Pan()
           .onBegin(() => {
-            context.value = translateY.value
-            isDraggingSheet.value = true
+            context.value = translateY.value;
+            isDraggingSheet.value = true;
           })
           .onUpdate((event) => {
-            const newY = context.value + event.translationY
-            const minY = windowHeight - maxSnapPoint
-            const maxY = windowHeight
+            const newY = context.value + event.translationY;
+            const minY = windowHeight - maxSnapPoint;
+            const maxY = windowHeight;
             if (enableOverDrag) {
               if (newY < minY) {
-                translateY.value = minY - Math.log(minY - newY + 1) * 10
+                translateY.value = minY - Math.log(minY - newY + 1) * 10;
               } else if (newY > maxY) {
-                translateY.value = maxY + Math.log(newY - maxY + 1) * 10
+                translateY.value = maxY + Math.log(newY - maxY + 1) * 10;
               } else {
-                translateY.value = newY
+                translateY.value = newY;
               }
             } else {
-              translateY.value = Math.max(minY, Math.min(maxY, newY))
+              translateY.value = Math.max(minY, Math.min(maxY, newY));
             }
           })
           .onEnd((event) => {
-            isDraggingSheet.value = false
+            isDraggingSheet.value = false;
             if (
               dismissOnSwipeDown &&
               translateY.value > windowHeight - minSnapPoint &&
               event.velocityY > 500
             ) {
-              closeSheet()
-              return
+              closeSheet();
+              return;
             }
             snapToPoint(
               findClosestSnapPoint(translateY.value, event.velocityY),
-              true
-            )
+              true,
+            );
           }),
       [
         translateY,
@@ -360,64 +418,62 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
         findClosestSnapPoint,
         snapToPoint,
         windowHeight,
-      ]
-    )
+      ],
+    );
 
     const contentPanGesture = useMemo(
       () =>
         Gesture.Pan()
           .activeOffsetY([-10, 10])
           .onStart(() => {
-            context.value = translateY.value
-            gestureStartScrollY.value = scrollY.value
-            isDraggingSheet.value = false
+            context.value = translateY.value;
+            gestureStartScrollY.value = scrollY.value;
+            isDraggingSheet.value = false;
           })
           .onUpdate((event) => {
-            const isFullyExpanded = currentSnapIndex.value === maxSnapIndex
+            const isFullyExpanded = currentSnapIndex.value === maxSnapIndex;
             if (!isFullyExpanded) {
-              isDraggingSheet.value = true
-              const newY = context.value + event.translationY
-              const minY = windowHeight - maxSnapPoint
-              const maxY = windowHeight
+              isDraggingSheet.value = true;
+              const newY = context.value + event.translationY;
+              const minY = windowHeight - maxSnapPoint;
+              const maxY = windowHeight;
               if (newY < minY) {
                 translateY.value = enableOverDrag
                   ? minY - Math.log(minY - newY + 1) * 10
-                  : minY
+                  : minY;
               } else if (newY > maxY) {
                 translateY.value = enableOverDrag
                   ? maxY + Math.log(newY - maxY + 1) * 10
-                  : maxY
+                  : maxY;
               } else {
-                translateY.value = newY
+                translateY.value = newY;
               }
-              return
+              return;
             }
-            const isAtTop = scrollY.value <= SCROLL_TOP_THRESHOLD
-            const isDraggingDown = event.translationY > 0
+            const isAtTop = scrollY.value <= SCROLL_TOP_THRESHOLD;
+            const isDraggingDown = event.translationY > 0;
             const wasAtTopAtStart =
-              gestureStartScrollY.value <= SCROLL_TOP_THRESHOLD
-            if (
-              !(
-                isDraggingSheet.value ||
-                (isAtTop && isDraggingDown && wasAtTopAtStart)
-              )
-            ) {
-              return
+              gestureStartScrollY.value <= SCROLL_TOP_THRESHOLD;
+            if (!(
+              isDraggingSheet.value ||
+              (isAtTop && isDraggingDown && wasAtTopAtStart)
+            )) {
+              return;
             }
-            isDraggingSheet.value = true
-            const newY = context.value + event.translationY
-            const minY = windowHeight - maxSnapPoint
-            const maxY = windowHeight
+            isDraggingSheet.value = true;
+            const newY = context.value + event.translationY;
+            const minY = windowHeight - maxSnapPoint;
+            const maxY = windowHeight;
             if (newY < minY) {
               translateY.value = enableOverDrag
                 ? minY - Math.log(minY - newY + 1) * 10
-                : minY
+                : minY;
             } else if (newY > maxY) {
               translateY.value = enableOverDrag
                 ? maxY + Math.log(newY - maxY + 1) * 10
-                : maxY
+                : maxY;
             } else {
-              translateY.value = newY
+              translateY.value = newY;
             }
           })
           .onEnd((event) => {
@@ -427,18 +483,18 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
                 translateY.value > windowHeight - minSnapPoint &&
                 event.velocityY > 500
               ) {
-                closeSheet()
+                closeSheet();
               } else {
                 snapToPoint(
                   findClosestSnapPoint(translateY.value, event.velocityY),
-                  true
-                )
+                  true,
+                );
               }
             }
-            isDraggingSheet.value = false
+            isDraggingSheet.value = false;
           })
           .onFinalize(() => {
-            isDraggingSheet.value = false
+            isDraggingSheet.value = false;
           }),
       [
         translateY,
@@ -456,31 +512,34 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
         findClosestSnapPoint,
         snapToPoint,
         windowHeight,
-      ]
-    )
+      ],
+    );
 
     const simultaneousGesture = useMemo(
       () => Gesture.Simultaneous(Gesture.Native(), contentPanGesture),
-      [contentPanGesture]
-    )
+      [contentPanGesture],
+    );
 
     useImperativeHandle(
       ref,
       () => ({
         snapToIndex: (index: number) => presentAtIndex(index),
         snapToPosition: (position: number) => {
-          pendingSnapIndex.current = null
-          setModalVisible(true)
-          translateY.value = withSpring(windowHeight - position, springConfig)
+          closeHandledRef.current = false;
+          clearCloseFallback();
+          isClosing.value = false;
+          pendingSnapIndex.current = null;
+          setModalVisible(true);
+          translateY.value = withSpring(windowHeight - position, springConfig);
         },
         expand: () => presentAtIndex(maxSnapIndex),
         collapse: () => presentAtIndex(0),
         close: () => {
           if (!modalVisible) {
-            handleCloseJS()
-            return
+            handleCloseJS();
+            return;
           }
-          closeSheet()
+          closeSheet();
         },
         getCurrentIndex: () => currentSnapIndex.value,
       }),
@@ -494,20 +553,22 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
         modalVisible,
         handleCloseJS,
         windowHeight,
-      ]
-    )
+        clearCloseFallback,
+        isClosing,
+      ],
+    );
 
     const sheetAnimatedStyle = useAnimatedStyle(
       (): Pick<ViewStyle, "transform"> => ({
         transform: [{ translateY: translateY.value }],
-      })
-    )
+      }),
+    );
 
     const contentAnimatedStyle = useAnimatedStyle(
       (): Pick<ViewStyle, "height"> => ({
         height: Math.max(0, windowHeight - translateY.value - handleHeight),
-      })
-    )
+      }),
+    );
 
     const backdropAnimatedStyle = useAnimatedStyle(
       (): Pick<ViewStyle, "opacity" | "pointerEvents"> => {
@@ -515,18 +576,18 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
           translateY.value,
           [windowHeight - maxSnapPoint, windowHeight],
           [backdropOpacity, 0],
-          Extrapolation.CLAMP
-        )
+          Extrapolation.CLAMP,
+        );
         return {
           opacity,
           pointerEvents: opacity > 0 ? "auto" : "none",
-        }
-      }
-    )
+        };
+      },
+    );
 
     const handleBackdropPress = useCallback(() => {
-      if (dismissOnBackdropPress) closeSheet()
-    }, [dismissOnBackdropPress, closeSheet])
+      if (dismissOnBackdropPress) closeSheet();
+    }, [dismissOnBackdropPress, closeSheet]);
 
     const sheetBaseStyle = useMemo(
       () => ({
@@ -536,8 +597,8 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
         borderTopRightRadius: borderRadius,
         borderCurve: "continuous" as const,
       }),
-      [backgroundColor, borderRadius, windowHeight]
-    )
+      [backgroundColor, borderRadius, windowHeight],
+    );
 
     const scrollProps: Partial<ScrollViewProps> = useMemo(
       () => ({
@@ -549,47 +610,47 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
         showsVerticalScrollIndicator: true,
         nestedScrollEnabled: true,
       }),
-      [enableScroll, onScroll]
-    )
+      [enableScroll, onScroll],
+    );
 
     const renderContent = useCallback(() => {
       if (!contentScrollEnabled) {
-        return <View style={styles.scrollableWrapper}>{children}</View>
+        return <View style={styles.scrollableWrapper}>{children}</View>;
       }
 
-      const childArray = Children.toArray(children)
+      const childArray = Children.toArray(children);
       if (childArray.length === 1 && isScrollableList(childArray[0])) {
-        const listElement = childArray[0] as ReactElement
+        const listElement = childArray[0] as ReactElement;
         const enhancedList = cloneElement(listElement, {
           ...scrollProps,
           // Bind the same animated ref used by close/reset + scrollY tracking.
           ref: scrollViewRef,
           onScroll: (event: unknown) => {
-            ;(scrollProps.onScroll as ((e: unknown) => void) | undefined)?.(
-              event
-            )
-            ;(
+            (scrollProps.onScroll as ((e: unknown) => void) | undefined)?.(
+              event,
+            );
+            (
               listElement.props as { onScroll?: (e: unknown) => void }
-            ).onScroll?.(event)
+            ).onScroll?.(event);
           },
           ...(enableDynamicSizing && {
             onContentSizeChange: (width: number, height: number) => {
-              handleContentSizeChange(width, height)
-              ;(
+              handleContentSizeChange(width, height);
+              (
                 listElement.props as {
-                  onContentSizeChange?: (w: number, h: number) => void
+                  onContentSizeChange?: (w: number, h: number) => void;
                 }
-              ).onContentSizeChange?.(width, height)
+              ).onContentSizeChange?.(width, height);
             },
           }),
-        } as never)
+        } as never);
         return (
           <GestureDetector gesture={simultaneousGesture}>
             <Animated.View style={styles.scrollableWrapper}>
               {enhancedList}
             </Animated.View>
           </GestureDetector>
-        )
+        );
       }
 
       return (
@@ -614,7 +675,7 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
             {footer ? null : <View style={{ height: insets.bottom }} />}
           </Animated.ScrollView>
         </GestureDetector>
-      )
+      );
     }, [
       children,
       footer,
@@ -628,7 +689,7 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
       enableDynamicSizing,
       handleContentSizeChange,
       insets.bottom,
-    ])
+    ]);
 
     return (
       <Modal
@@ -688,14 +749,14 @@ const BottomSheetComponent = forwardRef<BottomSheetMethods, BottomSheetProps>(
           </View>
         </GestureHandlerRootView>
       </Modal>
-    )
-  }
-)
+    );
+  },
+);
 
-BottomSheetComponent.displayName = "BottomSheet"
+BottomSheetComponent.displayName = "BottomSheet";
 
-export const BottomSheet = memo(BottomSheetComponent)
-export default BottomSheet
+export const BottomSheet = memo(BottomSheetComponent);
+export default BottomSheet;
 
 const styles = StyleSheet.create({
   container: {
@@ -734,4 +795,4 @@ const styles = StyleSheet.create({
   scrollableWrapper: {
     flex: 1,
   },
-})
+});
