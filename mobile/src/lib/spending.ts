@@ -46,6 +46,16 @@ export const SPENDING_GROUPINGS: {
 
 export type DateBounds = { from: string; to: string };
 
+/** One real cash-flow slice, ready to be drawn and described in a chart. */
+export type CashFlowPoint = {
+  /** Short axis label, e.g. `01`, `Jan`. */
+  label: string;
+  /** Full label used in the tooltip and accessibility text. */
+  rangeLabel: string;
+  income: Cents;
+  expenses: Cents;
+};
+
 const pad = (value: number) => String(value).padStart(2, "0");
 
 const toISODate = (date: Date) =>

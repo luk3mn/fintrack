@@ -23,6 +23,7 @@ import {
 import { useThemeColors } from "@/theme/tokens";
 import { EstablishmentCategorySheet } from "../components/EstablishmentCategorySheet";
 import { SpendingFilterSheet } from "../components/SpendingFilterSheet";
+import { TopCategoriesChart } from "../components/TopCategoriesChart";
 import { SpendingRow } from "../components/SpendingRow";
 import { useSpendingScreen } from "../hooks/useSpendingScreen";
 
@@ -67,6 +68,7 @@ export function SpendingScreen() {
     categoryOptions,
     bounds,
     summary,
+    categoryTotals,
     setCategoryForEstablishment,
     removeCategoryForEstablishment,
     isLoading,
@@ -134,7 +136,7 @@ export function SpendingScreen() {
                 numberOfLines={1}
                 className="text-2xl font-semibold text-foreground"
               >
-                Para onde foi
+                Fluxo de gastos
               </Text>
             </View>
             <Pressable
@@ -186,6 +188,18 @@ export function SpendingScreen() {
                     ? "estabelecimento"
                     : "estabelecimentos"}
               </Text>
+            </View>
+          </View>
+
+          <View className="pt-6">
+            <SectionTitle title="Maiores gastos" />
+            <View className="pt-3">
+              <TopCategoriesChart
+                rows={categoryTotals}
+                total={summary.total}
+                selected={category}
+                onSelect={setCategory}
+              />
             </View>
           </View>
 

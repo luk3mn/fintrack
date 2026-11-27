@@ -98,6 +98,21 @@ export function useSpendingScreen() {
     ],
   );
 
+  // Always category-based, even when the list below is grouped by store, so
+  // the comparison does not change shape when the user toggles the grouping.
+  const categoryTotals = useMemo(
+    () =>
+      summarizeSpending(
+        transactionsQuery.transactions,
+        internalIds,
+        bounds,
+        "category",
+        rules,
+        category,
+      ).rows,
+    [transactionsQuery.transactions, internalIds, bounds, rules, category],
+  );
+
   const updateRules = useCallback((next: SpendingCategoryRule[]) => {
     setRules(next);
     void saveSpendingCategoryRules(next);
@@ -130,6 +145,7 @@ export function useSpendingScreen() {
     categoryOptions,
     bounds,
     summary,
+    categoryTotals,
     setCategoryForEstablishment,
     removeCategoryForEstablishment,
     isLoading: accountsQuery.isLoading || transactionsQuery.isLoading,

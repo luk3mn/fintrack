@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Sparkline } from "expo-charts";
 import { Pressable, Text, View } from "react-native";
 import { useThemeColors } from "@/theme/tokens";
 
@@ -7,6 +8,9 @@ type Props = {
   value: string;
   delta?: number;
   deltaSuffix?: string;
+  /** Real monthly values used for the inline trend. */
+  sparkline?: number[];
+  sparkColor?: string;
   onPress?: () => void;
 };
 
@@ -20,6 +24,8 @@ export function MetricCard({
   value,
   delta,
   deltaSuffix = "%",
+  sparkline,
+  sparkColor,
   onPress,
 }: Props) {
   const colors = useThemeColors();
@@ -53,12 +59,26 @@ export function MetricCard({
       <Text className={`pt-1.5 text-xs ${deltaClass}`}>
         {delta === undefined ? "—" : deltaLabel(delta, deltaSuffix)}
       </Text>
+
+      {sparkline && sparkline.length > 1 ? (
+        <View className="w-full pt-2">
+          <Sparkline
+            data={sparkline}
+            height={22}
+            strokeWidth={1.8}
+            color={sparkColor ?? colors.primary}
+            showArea
+            showLastDot
+            style={{ width: "100%" }}
+          />
+        </View>
+      ) : null}
     </>
   );
 
   if (!onPress) {
     return (
-      <View className="flex-1 rounded-2xl bg-card px-3 pb-2 pt-3">
+      <View className="flex-1 rounded-2xl bg-card px-3 pb-3 pt-3">
         {content}
       </View>
     );
@@ -70,7 +90,7 @@ export function MetricCard({
       accessibilityRole="button"
       accessibilityLabel={`Ver detalhes de ${label.toLowerCase()}`}
       style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-      className="flex-1 rounded-2xl bg-card px-3 pb-2 pt-3"
+      className="flex-1 rounded-2xl bg-card px-3 pb-3 pt-3"
     >
       {content}
     </Pressable>

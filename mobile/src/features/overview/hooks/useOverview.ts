@@ -11,6 +11,7 @@ import {
   isInternalCardPayment,
   shiftISODate,
 } from "@/lib/transactions";
+import type { CashFlowPoint } from "@/lib/spending";
 import { summarizeAccounts } from "@/lib/summary";
 import type { AccountKind, Cents, Transaction } from "@/types/domain";
 
@@ -35,6 +36,8 @@ const ORDER: Record<AccountKind, number> = {
 };
 
 const MONTHS_BACK = 36;
+const FLOW_BUCKETS = 7;
+const SPARKLINE_MONTHS = 6;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -119,9 +122,11 @@ export function useOverview() {
     [accounts],
   );
 
-  // A small buffer before the window lets transfers that cross the month
-  // boundary find their pair, while the month filters below still ignore it.
-  const from = shiftISODate(previous.startISO, -3);
+  // Fetch enough real months for the KPI sparklines. A small buffer before the
+  // window lets transfers crossing its first day find their pair; the month
+  // filters below still ignore anything outside their bounds.
+  const sparklineStart = boundsFor(today, monthOffset - SPARKLINE_MONTHS + 1);
+  const from = shiftISODate(sparklineStart.startISO, -3);
   const to = monthOffset === 0 ? todayISO : current.endISO;
 
   const periodQueries = useQueries({
@@ -139,6 +144,9 @@ export function useOverview() {
 
   const currentEnd = monthOffset === 0 ? todayISO : current.endISO;
   const chartEndDay = monthOffset === 0 ? today.getDate() : current.days;
+  const monthShort = current.month
+    .toLocaleDateString("pt-BR", { month: "short" })
+    .replace(".", "");
 
   const derived = useMemo(() => {
     const currentTransactions = transactions.filter(
@@ -155,16 +163,40 @@ export function useOverview() {
     const currentTotals = totals(currentTransactions, internalIds);
     const previousTotals = totals(previousTransactions, internalIds);
 
-    const bucketOf = (date: string) => {
-      const day = Number(date.slice(8, 10));
-      return Math.min(6, Math.floor(((day - 1) / chartEndDay) * 7));
+    const history = Array.from({ length: SPARKLINE_MONTHS }, (_, index) => {
+      const offset = monthOffset - SPARKLINE_MONTHS + 1 + index;
+      const monthBounds = boundsFor(today, offset);
+      const endISO = offset === 0 ? todayISO : monthBounds.endISO;
+      const monthTransactions = transactions.filter(
+        (transaction) =>
+          transaction.date >= monthBounds.startISO &&
+          transaction.date <= endISO,
+      );
+      return totals(monthTransactions, internalIds);
+    });
+    const sparklines = {
+      income: history.map((month) => month.income),
+      expenses: history.map((month) => month.expenses),
+      savings: history.map((month) => month.savingsRate ?? 0),
     };
 
-    const weekly: Cents[] = Array.from({ length: 7 }, () => 0);
+    const bucketOf = (date: string) => {
+      const day = Number(date.slice(8, 10));
+      return Math.min(
+        FLOW_BUCKETS - 1,
+        Math.max(0, Math.ceil((day * FLOW_BUCKETS) / chartEndDay) - 1),
+      );
+    };
+
+    const buckets = Array.from({ length: FLOW_BUCKETS }, (_, index) => ({
+      fromDay: Math.floor((index * chartEndDay) / FLOW_BUCKETS) + 1,
+      toDay: Math.floor(((index + 1) * chartEndDay) / FLOW_BUCKETS),
+      income: 0,
+      expenses: 0,
+    }));
     const categoryTotals = new Map<string, Cents>();
 
     for (const transaction of currentTransactions) {
-      if (transaction.amount >= 0) continue;
       if (
         internalIds.has(transaction.id) ||
         isInternalCardPayment(transaction.description, transaction.category)
@@ -172,8 +204,16 @@ export function useOverview() {
         continue;
       }
 
-      const amount = -transaction.amount;
-      weekly[bucketOf(transaction.date)] += amount;
+      const amount = Math.abs(transaction.amount);
+      if (amount === 0) continue;
+
+      const bucket = buckets[bucketOf(transaction.date)];
+      if (transaction.amount > 0) {
+        bucket.income += amount;
+        continue;
+      }
+
+      bucket.expenses += amount;
 
       const raw = transaction.category?.trim();
       const name = raw ? categoryLabel(raw) : "Outros";
@@ -189,9 +229,19 @@ export function useOverview() {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3);
 
+    const flow: CashFlowPoint[] = buckets.map(
+      ({ fromDay, toDay, income, expenses }) => ({
+        label: pad(fromDay),
+        rangeLabel: `${pad(fromDay)}–${pad(toDay)} ${monthShort}`,
+        income,
+        expenses,
+      }),
+    );
+
     return {
       currentTotals,
-      weekly,
+      flow,
+      sparklines,
       currentBucket: monthOffset === 0 ? bucketOf(todayISO) : -1,
       categories,
       incomeDelta: percentChange(currentTotals.income, previousTotals.income),
@@ -210,9 +260,11 @@ export function useOverview() {
     current.startISO,
     currentEnd,
     chartEndDay,
+    monthShort,
     previous.startISO,
     previous.endISO,
     monthOffset,
+    today,
     todayISO,
   ]);
 
@@ -261,7 +313,8 @@ export function useOverview() {
     incomeDelta: derived.incomeDelta,
     expensesDelta: derived.expensesDelta,
     savingsDelta: derived.savingsDelta,
-    weekly: derived.weekly,
+    flow: derived.flow,
+    sparklines: derived.sparklines,
     currentBucket: derived.currentBucket,
     categories: derived.categories,
     lastDay: current.days,

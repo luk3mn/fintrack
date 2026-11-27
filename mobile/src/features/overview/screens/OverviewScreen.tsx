@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
+import { CashFlowChart } from "@/components/ui/CashFlowChart";
 import { signOut } from "@/features/auth/api/auth";
 import { formatBRLCompact } from "@/lib/money";
 import { useThemeColors } from "@/theme/tokens";
@@ -18,8 +19,6 @@ import { AccountBalancesSheet } from "../components/AccountBalancesSheet";
 import { BalanceHero } from "../components/BalanceHero";
 import { BudgetSection } from "../components/BudgetSection";
 import { IncomeBreakdownSheet } from "../components/IncomeBreakdownSheet";
-import { CashFlowChart } from "../components/CashFlowChart";
-import { CategoryBreakdown } from "../components/CategoryBreakdown";
 import { MetricCard } from "../components/MetricCard";
 import { MonthPicker } from "../components/MonthPicker";
 import { OverviewHeader } from "../components/OverviewHeader";
@@ -39,7 +38,6 @@ export function OverviewScreen() {
     connections,
     summary,
     monthLabel,
-    isCurrentMonth,
     canGoNext,
     canGoPrev,
     goToPreviousMonth,
@@ -51,11 +49,10 @@ export function OverviewScreen() {
     incomeDelta,
     expensesDelta,
     savingsDelta,
-    weekly,
+    flow,
+    sparklines,
     currentBucket,
-    categories,
     lastSync,
-    lastDay,
     isLoading,
     isError,
     isRefetching,
@@ -85,8 +82,6 @@ export function OverviewScreen() {
       </View>
     );
   }
-
-  const monthShort = monthLabel.split(" ")[0].slice(0, 3).toLowerCase();
 
   return (
     <>
@@ -132,12 +127,16 @@ export function OverviewScreen() {
               label="Entradas"
               value={formatBRLCompact(income)}
               delta={incomeDelta}
+              sparkline={sparklines.income}
+              sparkColor={colors.primary}
               onPress={() => setIncomeOpen(true)}
             />
             <MetricCard
               label="Saídas"
               value={formatBRLCompact(expenses)}
               delta={expensesDelta}
+              sparkline={sparklines.expenses}
+              sparkColor={colors.warm}
             />
             <MetricCard
               label="Economia"
@@ -146,37 +145,22 @@ export function OverviewScreen() {
               }
               delta={savingsDelta}
               deltaSuffix=" p.p."
+              sparkline={sparklines.savings}
+              sparkColor={colors.accent}
             />
           </View>
 
           <View className="pt-6">
-            <SectionHeader
-              title="Fluxo do mês"
-              action="VER RELATÓRIO"
-              actionCaps
-            />
+            <SectionHeader title="Fluxo do mês" />
           </View>
 
           <View className="pt-2">
             <CashFlowChart
-              data={weekly}
-              highlight={currentBucket}
-              startLabel={`01 ${monthShort}`}
-              middleLabel={`15 ${monthShort}`}
-              endLabel={isCurrentMonth ? "hoje" : `${lastDay} ${monthShort}`}
+              data={flow}
+              initialSelected={currentBucket}
+              granularity="semana"
+              onPress={() => router.navigate("/spending")}
             />
-          </View>
-
-          <View className="pt-5">
-            <SectionHeader
-              title="Para onde foi"
-              action="Ver relatório"
-              onAction={() => router.navigate("/spending")}
-            />
-          </View>
-
-          <View className="pt-3">
-            <CategoryBreakdown categories={categories} />
           </View>
 
           <View className="pt-6">
