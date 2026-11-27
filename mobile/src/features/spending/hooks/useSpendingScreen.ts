@@ -3,6 +3,7 @@ import { useAccounts } from "@/features/accounts/hooks/useAccounts";
 import { useTransactions } from "@/features/transactions/hooks/useTransactions";
 import {
   spendingBounds,
+  spendingCategories,
   summarizeSpending,
   type SpendingGrouping,
   type SpendingPeriod,
@@ -20,7 +21,9 @@ export function useSpendingScreen() {
   const accountsQuery = useAccounts();
   const [today] = useState(() => new Date());
   const [period, setPeriod] = useState<SpendingPeriod>("month");
+  const [month, setMonth] = useState(() => new Date().getMonth());
   const [grouping, setGrouping] = useState<SpendingGrouping>("establishment");
+  const [category, setCategory] = useState<string | null>(null);
   const [rules, setRules] = useState<SpendingCategoryRule[]>([]);
 
   useEffect(() => {
@@ -33,7 +36,10 @@ export function useSpendingScreen() {
     };
   }, []);
 
-  const bounds = useMemo(() => spendingBounds(period, today), [period, today]);
+  const bounds = useMemo(
+    () => spendingBounds(period, today, month),
+    [period, today, month],
+  );
 
   // Match Visão geral: only cash accounts feed the expense flow. Card invoices
   // are already represented by the debit that pays them.
@@ -58,6 +64,20 @@ export function useSpendingScreen() {
     [transactionsQuery.transactions],
   );
 
+  const categoryOptions = useMemo(() => {
+    const present = spendingCategories(
+      transactionsQuery.transactions,
+      internalIds,
+      bounds,
+      rules,
+    );
+    // Keep the current choice visible even if this period has no transactions
+    // for it, so the user can still see and clear the filter.
+    return category && !present.includes(category)
+      ? [...present, category].sort((a, b) => a.localeCompare(b, "pt-BR"))
+      : present;
+  }, [transactionsQuery.transactions, internalIds, bounds, rules, category]);
+
   const summary = useMemo(
     () =>
       summarizeSpending(
@@ -66,8 +86,16 @@ export function useSpendingScreen() {
         bounds,
         grouping,
         rules,
+        category,
       ),
-    [transactionsQuery.transactions, internalIds, bounds, grouping, rules],
+    [
+      transactionsQuery.transactions,
+      internalIds,
+      bounds,
+      grouping,
+      rules,
+      category,
+    ],
   );
 
   const updateRules = useCallback((next: SpendingCategoryRule[]) => {
@@ -93,8 +121,13 @@ export function useSpendingScreen() {
   return {
     period,
     setPeriod,
+    month,
+    setMonth,
     grouping,
     setGrouping,
+    category,
+    setCategory,
+    categoryOptions,
     bounds,
     summary,
     setCategoryForEstablishment,

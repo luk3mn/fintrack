@@ -14,6 +14,26 @@ export const SPENDING_PERIODS: { key: SpendingPeriod; label: string }[] = [
   { key: "year", label: "Ano" },
 ];
 
+/** Months of the current year, selectable under the "Mês" filter. */
+export const SPENDING_MONTHS: {
+  index: number;
+  label: string;
+  fullLabel: string;
+}[] = [
+  { index: 0, label: "Jan", fullLabel: "Janeiro" },
+  { index: 1, label: "Fev", fullLabel: "Fevereiro" },
+  { index: 2, label: "Mar", fullLabel: "Março" },
+  { index: 3, label: "Abr", fullLabel: "Abril" },
+  { index: 4, label: "Mai", fullLabel: "Maio" },
+  { index: 5, label: "Jun", fullLabel: "Junho" },
+  { index: 6, label: "Jul", fullLabel: "Julho" },
+  { index: 7, label: "Ago", fullLabel: "Agosto" },
+  { index: 8, label: "Set", fullLabel: "Setembro" },
+  { index: 9, label: "Out", fullLabel: "Outubro" },
+  { index: 10, label: "Nov", fullLabel: "Novembro" },
+  { index: 11, label: "Dez", fullLabel: "Dezembro" },
+];
+
 export type SpendingGrouping = "establishment" | "category";
 
 export const SPENDING_GROUPINGS: {
@@ -31,10 +51,11 @@ const pad = (value: number) => String(value).padStart(2, "0");
 const toISODate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-/** The current week (last 7 days), month or year, up to today. */
+/** The current week (last 7 days), a chosen month, or the year up to today. */
 export function spendingBounds(
   period: SpendingPeriod,
   base: Date = new Date(),
+  month: number = base.getMonth(),
 ): DateBounds {
   if (period === "week") {
     const from = new Date(
@@ -49,8 +70,10 @@ export function spendingBounds(
     return { from: `${base.getFullYear()}-01-01`, to: toISODate(base) };
   }
 
-  const from = new Date(base.getFullYear(), base.getMonth(), 1);
-  return { from: toISODate(from), to: toISODate(base) };
+  const target = Math.min(11, Math.max(0, month));
+  const from = new Date(base.getFullYear(), target, 1);
+  const to = new Date(base.getFullYear(), target + 1, 0);
+  return { from: toISODate(from), to: toISODate(to) };
 }
 
 function shortDate(iso: string) {
@@ -118,19 +141,22 @@ type Group = {
   lastDate: string;
 };
 
-/**
- * Sums real debits by establishment or category, sorted from the largest to
- * the smallest. Internal transfers and card-invoice mirrors are excluded, so
- * the total matches the expenses shown elsewhere in the app.
- */
-export function summarizeSpending(
+type SpendingEntry = {
+  date: string;
+  amount: Cents;
+  establishment: string;
+  category: string;
+  customCategory: boolean;
+};
+
+/** Real debits in the period, already normalized and free of internal money moves. */
+function spendingEntries(
   transactions: Transaction[],
   internalIds: Set<string>,
   bounds: DateBounds,
-  grouping: SpendingGrouping = "establishment",
-  rules: SpendingCategoryRule[] = [],
-): SpendingSummary {
-  const groups = new Map<string, Group>();
+  rules: SpendingCategoryRule[],
+): SpendingEntry[] {
+  const entries: SpendingEntry[] = [];
 
   for (const transaction of transactions) {
     const date = transaction.date.slice(0, 10);
@@ -152,7 +178,59 @@ export function summarizeSpending(
       (transaction.category?.trim()
         ? categoryLabel(transaction.category)
         : "Outros");
-    const name = grouping === "category" ? category : establishment;
+
+    entries.push({
+      date,
+      amount: Math.abs(transaction.amount),
+      establishment,
+      category,
+      customCategory: Boolean(ruleCategory),
+    });
+  }
+
+  return entries;
+}
+
+/** Categories actually present in the period, sorted for the filter sheet. */
+export function spendingCategories(
+  transactions: Transaction[],
+  internalIds: Set<string>,
+  bounds: DateBounds,
+  rules: SpendingCategoryRule[] = [],
+): string[] {
+  const categories = new Set(
+    spendingEntries(transactions, internalIds, bounds, rules).map(
+      (entry) => entry.category,
+    ),
+  );
+
+  return [...categories].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+/**
+ * Sums real debits by establishment or category, sorted from the largest to
+ * the smallest. Internal transfers and card-invoice mirrors are excluded, so
+ * the total matches the expenses shown elsewhere in the app.
+ */
+export function summarizeSpending(
+  transactions: Transaction[],
+  internalIds: Set<string>,
+  bounds: DateBounds,
+  grouping: SpendingGrouping = "establishment",
+  rules: SpendingCategoryRule[] = [],
+  categoryFilter?: string | null,
+): SpendingSummary {
+  const groups = new Map<string, Group>();
+
+  for (const entry of spendingEntries(
+    transactions,
+    internalIds,
+    bounds,
+    rules,
+  )) {
+    if (categoryFilter && entry.category !== categoryFilter) continue;
+
+    const name = grouping === "category" ? entry.category : entry.establishment;
     const key = normalizeText(name) || "outros";
 
     const group = groups.get(key) ?? {
@@ -160,14 +238,17 @@ export function summarizeSpending(
       total: 0,
       count: 0,
       categories: new Map<string, number>(),
-      customCategory: Boolean(ruleCategory),
-      lastDate: date,
+      customCategory: entry.customCategory,
+      lastDate: entry.date,
     };
 
-    group.total += Math.abs(transaction.amount);
+    group.total += entry.amount;
     group.count += 1;
-    group.categories.set(category, (group.categories.get(category) ?? 0) + 1);
-    if (date > group.lastDate) group.lastDate = date;
+    group.categories.set(
+      entry.category,
+      (group.categories.get(entry.category) ?? 0) + 1,
+    );
+    if (entry.date > group.lastDate) group.lastDate = entry.date;
     groups.set(key, group);
   }
 

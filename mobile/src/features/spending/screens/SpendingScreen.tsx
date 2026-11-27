@@ -22,7 +22,7 @@ import {
 } from "@/lib/spending";
 import { useThemeColors } from "@/theme/tokens";
 import { EstablishmentCategorySheet } from "../components/EstablishmentCategorySheet";
-import { SpendingPeriodFilter } from "../components/SpendingPeriodFilter";
+import { SpendingFilterSheet } from "../components/SpendingFilterSheet";
 import { SpendingRow } from "../components/SpendingRow";
 import { useSpendingScreen } from "../hooks/useSpendingScreen";
 
@@ -58,8 +58,13 @@ export function SpendingScreen() {
   const {
     period,
     setPeriod,
+    month,
+    setMonth,
     grouping,
     setGrouping,
+    category,
+    setCategory,
+    categoryOptions,
     bounds,
     summary,
     setCategoryForEstablishment,
@@ -70,6 +75,9 @@ export function SpendingScreen() {
     refetch,
   } = useSpendingScreen();
   const [editing, setEditing] = useState<SpendingRowData | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const hasActiveFilter =
+    period !== "month" || month !== new Date().getMonth() || category !== null;
 
   if (isLoading) {
     return (
@@ -129,6 +137,24 @@ export function SpendingScreen() {
                 Para onde foi
               </Text>
             </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Abrir filtros de gastos"
+              onPress={() => setFiltersOpen(true)}
+              className="relative size-9 items-center justify-center rounded-full bg-card active:opacity-70"
+            >
+              <Ionicons
+                name="options-outline"
+                size={18}
+                color={colors.foreground}
+              />
+              {hasActiveFilter ? (
+                <View
+                  className="absolute right-1.5 top-1.5 size-1.5 rounded-full"
+                  style={{ backgroundColor: colors.accent }}
+                />
+              ) : null}
+            </Pressable>
           </View>
           <Text className="pt-3 text-xs text-muted">
             {spendingRangeLabel(bounds)} ·{" "}
@@ -136,10 +162,6 @@ export function SpendingScreen() {
               ? "gastos por categoria"
               : "gastos por estabelecimento"}
           </Text>
-
-          <View className="pt-4">
-            <SpendingPeriodFilter value={period} onChange={setPeriod} />
-          </View>
 
           <View className="pt-4">
             <View className="rounded-2xl bg-card px-4 py-3">
@@ -249,14 +271,30 @@ export function SpendingScreen() {
         </View>
       </ScrollView>
 
+      <SpendingFilterSheet
+        visible={filtersOpen}
+        value={{ period, month, category }}
+        categories={categoryOptions}
+        onApply={({
+          period: nextPeriod,
+          month: nextMonth,
+          category: nextCategory,
+        }) => {
+          setPeriod(nextPeriod);
+          setMonth(nextMonth);
+          setCategory(nextCategory);
+        }}
+        onDismiss={() => setFiltersOpen(false)}
+      />
+
       <EstablishmentCategorySheet
         visible={editing !== null}
         name={editing?.name ?? ""}
         currentCategory={editing?.category ?? ""}
         hasRule={editing?.customCategory ?? false}
         onDismiss={() => setEditing(null)}
-        onSave={(category) => {
-          if (editing) setCategoryForEstablishment(editing.name, category);
+        onSave={(nextCategory) => {
+          if (editing) setCategoryForEstablishment(editing.name, nextCategory);
         }}
         onRemove={() => {
           if (editing) removeCategoryForEstablishment(editing.name);
