@@ -1,7 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ComboChart, ChartProvider, type ChartConfig } from "expo-charts";
+import { ComboChart, type ChartConfig } from "expo-charts";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import {
+  ChartThemeProvider,
+  useChartPalette,
+} from "@/components/ui/ChartThemeProvider";
 import { ChartTapToggle } from "@/components/ui/ChartTapToggle";
 import { formatBRLShort, formatNetBRL } from "@/lib/money";
 import type { CashFlowPoint } from "@/lib/spending";
@@ -73,6 +77,7 @@ export function CashFlowChart({
   granularity = "período",
 }: Props) {
   const colors = useThemeColors();
+  const palette = useChartPalette();
 
   const dataKey = `${initialSelected}:${data
     .map(
@@ -111,9 +116,9 @@ export function CashFlowChart({
   }));
 
   const config: ChartConfig = {
-    income: { label: "Entradas", color: colors.primary },
-    expenses: { label: "Saídas", color: colors.warm },
-    balance: { label: "Saldo", color: colors.foreground },
+    income: { label: "Entradas", color: palette[0] },
+    expenses: { label: "Saídas", color: palette[1] },
+    balance: { label: "Saldo", color: palette[2] },
   };
   const types: Record<string, "bar" | "line" | "area"> = {
     income: "bar",
@@ -131,23 +136,7 @@ export function CashFlowChart({
         if (index !== null) setSelection({ key: dataKey, index });
       }}
     >
-      <ChartProvider
-        mode="system"
-        tokens={{
-          background: colors.background,
-          foreground: colors.foreground,
-          card: colors.card,
-          muted: colors.tile,
-          mutedForeground: colors.muted,
-          border: colors.border,
-          popover: colors.card,
-          popoverForeground: colors.foreground,
-          primary: colors.primary,
-          primaryForeground: colors.primaryForeground,
-          positive: colors.accent,
-          negative: colors.danger,
-        }}
-      >
+      <ChartThemeProvider>
         <ComboChart
           data={rows}
           config={config}
@@ -171,7 +160,7 @@ export function CashFlowChart({
           accessibilityLabel={`Entradas, saídas e saldo por ${granularity}.`}
           style={{ width: "100%" }}
         />
-      </ChartProvider>
+      </ChartThemeProvider>
     </ChartTapToggle>
   );
 
@@ -221,12 +210,12 @@ export function CashFlowChart({
         <MiniStat
           label="Entradas"
           value={formatBRLShort(selectedPoint.income)}
-          color={colors.primary}
+          color={palette[0]}
         />
         <MiniStat
           label="Saídas"
           value={formatBRLShort(selectedPoint.expenses)}
-          color={colors.warm}
+          color={palette[1]}
         />
       </View>
     </View>

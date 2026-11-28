@@ -1,5 +1,13 @@
 import { Pressable, Text, View } from "react-native";
-import type { InvestmentFilter } from "@/lib/investments";
+import {
+  chartTextColor,
+  useChartPalette,
+} from "@/components/ui/ChartThemeProvider";
+import {
+  INVESTMENT_FLOW_ORDER,
+  type InvestmentFilter,
+  type InvestmentFlowCategory,
+} from "@/lib/investments";
 import { useThemeColors } from "@/theme/tokens";
 
 type Props = {
@@ -16,19 +24,22 @@ const FILTERS: { key: InvestmentFilter; label: string }[] = [
 
 export function FilterTabs({ value, onChange }: Props) {
   const colors = useThemeColors();
+  const palette = useChartPalette();
 
   return (
     <View className="flex-row flex-wrap gap-2 pt-3">
       {FILTERS.map((filter) => {
         const active = filter.key === value;
+        const seriesColor =
+          palette[
+            INVESTMENT_FLOW_ORDER.indexOf(filter.key as InvestmentFlowCategory)
+          ] ?? colors.primary;
         const backgroundColor =
-          filter.key === "all"
-            ? colors.primary
-            : colors.chartSeries[filter.key];
+          filter.key === "all" ? colors.primary : seriesColor;
         const textColor =
           filter.key === "all"
             ? colors.primaryForeground
-            : colors.chartSeriesOn;
+            : chartTextColor(seriesColor);
 
         return (
           <Pressable

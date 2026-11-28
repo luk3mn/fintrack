@@ -1,15 +1,15 @@
 import { Text, View } from "react-native";
+import { useChartPalette } from "@/components/ui/ChartThemeProvider";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { shortInvestmentName, type InvestmentSummary } from "@/lib/investments";
 import { formatBRL } from "@/lib/money";
-import { useThemeColors } from "@/theme/tokens";
 
 type Props = {
   summary: InvestmentSummary;
 };
 
 export function MaturitySection({ summary }: Props) {
-  const colors = useThemeColors();
+  const palette = useChartPalette();
   const maturities = summary.maturities.slice(0, 2);
 
   return (
@@ -28,7 +28,7 @@ export function MaturitySection({ summary }: Props) {
               className="min-h-13 flex-1 rounded-xl bg-card px-4 py-2"
               style={{
                 borderLeftWidth: 3,
-                borderLeftColor: colors.chartSeries.fixed,
+                borderLeftColor: palette[0],
               }}
             >
               <Text numberOfLines={1} className="text-xs leading-3 text-soft">

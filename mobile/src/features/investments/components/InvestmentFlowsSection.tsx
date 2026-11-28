@@ -1,14 +1,18 @@
-import { ChartProvider, LineSeriesChart, type ChartConfig } from "expo-charts";
+import { LineSeriesChart, type ChartConfig } from "expo-charts";
 import { useState } from "react";
 import { Text, View } from "react-native";
+import {
+  ChartThemeProvider,
+  useChartPalette,
+} from "@/components/ui/ChartThemeProvider";
 import { ChartTapToggle } from "@/components/ui/ChartTapToggle";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import {
   INVESTMENT_FLOW_LABELS,
+  INVESTMENT_FLOW_ORDER,
   type InvestmentFlowCategory,
 } from "@/lib/investments";
 import { formatBRL, formatBRLShort } from "@/lib/money";
-import { useThemeColors } from "@/theme/tokens";
 import type { InvestmentFlowPoint } from "../hooks/useInvestmentFlows";
 
 type Props = {
@@ -21,7 +25,7 @@ const CHART_HEIGHT = 150;
 
 /** Accumulated applications by type, in the old allocation section's place. */
 export function InvestmentFlowsSection({ flows, keys, isLoading }: Props) {
-  const colors = useThemeColors();
+  const palette = useChartPalette();
   const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
 
   if (tooltipIndex !== null && tooltipIndex >= flows.length) {
@@ -31,7 +35,10 @@ export function InvestmentFlowsSection({ flows, keys, isLoading }: Props) {
   const config: ChartConfig = Object.fromEntries(
     keys.map((key) => [
       key,
-      { label: INVESTMENT_FLOW_LABELS[key], color: colors.chartSeries[key] },
+      {
+        label: INVESTMENT_FLOW_LABELS[key],
+        color: palette[INVESTMENT_FLOW_ORDER.indexOf(key)],
+      },
     ]),
   );
   const rows = flows.map((point) => ({ ...point }));
@@ -54,23 +61,7 @@ export function InvestmentFlowsSection({ flows, keys, isLoading }: Props) {
               activeIndex={tooltipIndex}
               onIndexChange={setTooltipIndex}
             >
-              <ChartProvider
-                mode="system"
-                tokens={{
-                  background: colors.background,
-                  foreground: colors.foreground,
-                  card: colors.card,
-                  muted: colors.tile,
-                  mutedForeground: colors.muted,
-                  border: colors.border,
-                  popover: colors.card,
-                  popoverForeground: colors.foreground,
-                  primary: colors.primary,
-                  primaryForeground: colors.primaryForeground,
-                  positive: colors.accent,
-                  negative: colors.danger,
-                }}
-              >
+              <ChartThemeProvider>
                 <LineSeriesChart
                   data={rows}
                   config={config}
@@ -97,7 +88,7 @@ export function InvestmentFlowsSection({ flows, keys, isLoading }: Props) {
                     .join("; ")}`}
                   style={{ width: "100%" }}
                 />
-              </ChartProvider>
+              </ChartThemeProvider>
             </ChartTapToggle>
 
             <View className="flex-row flex-wrap gap-3 pt-3">
@@ -105,7 +96,10 @@ export function InvestmentFlowsSection({ flows, keys, isLoading }: Props) {
                 <View key={key} className="flex-row items-center gap-1.5">
                   <View
                     className="size-2 rounded-full"
-                    style={{ backgroundColor: colors.chartSeries[key] }}
+                    style={{
+                      backgroundColor:
+                        palette[INVESTMENT_FLOW_ORDER.indexOf(key)],
+                    }}
                   />
                   <Text className="text-xs text-muted">
                     {INVESTMENT_FLOW_LABELS[key]}

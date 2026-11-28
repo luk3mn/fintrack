@@ -98,9 +98,9 @@ export function useSpendingScreen() {
     ],
   );
 
-  // Always category-based, even when the list below is grouped by store, so
-  // the comparison does not change shape when the user toggles the grouping.
-  const categoryTotals = useMemo(
+  // Chart data ignores the category filter: tapping a slice highlights it and
+  // filters the list below, but the donut keeps the whole period composition.
+  const allCategories = useMemo(
     () =>
       summarizeSpending(
         transactionsQuery.transactions,
@@ -108,9 +108,9 @@ export function useSpendingScreen() {
         bounds,
         "category",
         rules,
-        category,
-      ).rows,
-    [transactionsQuery.transactions, internalIds, bounds, rules, category],
+        null,
+      ),
+    [transactionsQuery.transactions, internalIds, bounds, rules],
   );
 
   const updateRules = useCallback((next: SpendingCategoryRule[]) => {
@@ -145,7 +145,8 @@ export function useSpendingScreen() {
     categoryOptions,
     bounds,
     summary,
-    categoryTotals,
+    categoryTotals: allCategories.rows,
+    chartTotal: allCategories.total,
     setCategoryForEstablishment,
     removeCategoryForEstablishment,
     isLoading: accountsQuery.isLoading || transactionsQuery.isLoading,

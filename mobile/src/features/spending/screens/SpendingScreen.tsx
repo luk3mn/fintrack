@@ -23,7 +23,7 @@ import {
 import { useThemeColors } from "@/theme/tokens";
 import { EstablishmentCategorySheet } from "../components/EstablishmentCategorySheet";
 import { SpendingFilterSheet } from "../components/SpendingFilterSheet";
-import { TopCategoriesChart } from "../components/TopCategoriesChart";
+import { SpendingDonutChart } from "../components/SpendingDonutChart";
 import { SpendingRow } from "../components/SpendingRow";
 import { useSpendingScreen } from "../hooks/useSpendingScreen";
 
@@ -69,6 +69,7 @@ export function SpendingScreen() {
     bounds,
     summary,
     categoryTotals,
+    chartTotal,
     setCategoryForEstablishment,
     removeCategoryForEstablishment,
     isLoading,
@@ -194,9 +195,9 @@ export function SpendingScreen() {
           <View className="pt-6">
             <SectionTitle title="Maiores gastos" />
             <View className="pt-3">
-              <TopCategoriesChart
+              <SpendingDonutChart
                 rows={categoryTotals}
-                total={summary.total}
+                total={chartTotal}
                 selected={category}
                 onSelect={setCategory}
               />

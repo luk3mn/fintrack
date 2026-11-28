@@ -85,14 +85,6 @@ export const themes = {
     soft: palettes.parchment[700],
     warm: palettes.parchment[600],
     tile: palettes.parchment[100],
-    // Deliberately distinct hues for multi-series charts.
-    chartSeries: {
-      fixed: "#2563eb",
-      funds: "#b45309",
-      equity: "#15803d",
-      other: "#a21caf",
-    },
-    chartSeriesOn: "#ffffff",
   },
   dark: {
     background: palettes.spaceIndigo[950],
@@ -110,13 +102,6 @@ export const themes = {
     soft: palettes.dustyGrape[300],
     warm: palettes.parchment[400],
     tile: palettes.spaceIndigo[800],
-    chartSeries: {
-      fixed: "#7dd3fc",
-      funds: "#fbbf24",
-      equity: "#4ade80",
-      other: "#f0abfc",
-    },
-    chartSeriesOn: palettes.spaceIndigo[950],
   },
 } as const;
 
