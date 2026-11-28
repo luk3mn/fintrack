@@ -38,9 +38,9 @@ function BackButton() {
       onPress={() => router.back()}
       accessibilityRole="button"
       accessibilityLabel="Voltar"
-      className="size-9 items-center justify-center rounded-full bg-card active:opacity-70"
+      className="p-1 active:opacity-70"
     >
-      <Ionicons name="arrow-back" size={18} color={colors.foreground} />
+      <Ionicons name="chevron-back" size={20} color={colors.foreground} />
     </Pressable>
   );
 }
@@ -143,7 +143,7 @@ export function SpendingScreen() {
               accessibilityRole="button"
               accessibilityLabel="Abrir filtros de gastos"
               onPress={() => setFiltersOpen(true)}
-              className="relative size-9 items-center justify-center rounded-full bg-card active:opacity-70"
+              className="relative p-1 active:opacity-70"
             >
               <Ionicons
                 name="options-outline"

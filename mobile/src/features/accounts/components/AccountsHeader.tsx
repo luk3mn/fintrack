@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { relativeSyncLabel } from "@/lib/dates";
+import { SyncStatus } from "@/components/ui/SyncStatus";
 
 type Props = {
   lastSync?: Date;
@@ -9,14 +9,12 @@ type Props = {
 export function AccountsHeader({ lastSync, loading = false }: Props) {
   return (
     <View className="flex-row items-center justify-between pt-2">
-      <View>
+      <View className="px-1">
         <Text className="text-2xl font-semibold text-foreground">Contas</Text>
       </View>
 
-      <View className="h-10 w-32 flex-row items-center justify-center rounded-lg bg-card">
-        <Text className="text-xs text-soft">
-          {loading ? "Sincronizando…" : relativeSyncLabel(lastSync)}
-        </Text>
+      <View className="mt-1 flex-row justify-end px-1">
+        <SyncStatus lastSync={lastSync} loading={loading} />
       </View>
     </View>
   );

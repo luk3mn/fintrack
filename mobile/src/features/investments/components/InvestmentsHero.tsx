@@ -14,6 +14,11 @@ export function InvestmentsHero({ summary, onPress }: Props) {
   const hasProfit = summary.profit !== 0;
   const profitLabel = hasProfit ? formatSignedBRL(summary.profit) : "—";
   const arrow = summary.profit >= 0 ? "↗" : "↘";
+  const profitColor = !hasProfit
+    ? colors.muted
+    : summary.profit < 0
+      ? colors.warm
+      : colors.chartSeries.equity;
 
   return (
     <Pressable
@@ -22,16 +27,16 @@ export function InvestmentsHero({ summary, onPress }: Props) {
       accessibilityLabel="Ver patrimônio investido por instituição"
       accessibilityHint="Abre o detalhamento por banco"
       style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
-      className="min-h-36 rounded-3xl bg-hero px-4 pb-4 pt-5"
+      className="min-h-36 rounded-3xl bg-card px-4 pb-4 pt-5"
     >
       <View className="flex-row items-center justify-between gap-2">
-        <Text className="text-xs uppercase tracking-wider text-soft">
+        <Text className="text-xs uppercase tracking-wider text-muted">
           Patrimônio investido
         </Text>
         <Ionicons
           name="arrow-up-right-box-outline"
           size={20}
-          color={colors.soft}
+          color={colors.chartSeries.fixed}
         />
       </View>
 
@@ -39,16 +44,12 @@ export function InvestmentsHero({ summary, onPress }: Props) {
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
-        className="pt-2 text-3xl font-semibold leading-9 text-hero-foreground"
+        className="pt-2 text-3xl font-semibold leading-9 text-foreground"
       >
         {formatBRL(summary.total)}
       </Text>
 
-      <Text
-        className={`pt-3 text-xs font-medium ${
-          hasProfit && summary.profit < 0 ? "text-warm" : "text-accent"
-        }`}
-      >
+      <Text className="pt-3 text-xs font-medium" style={{ color: profitColor }}>
         Rendimento total {profitLabel}
         {hasProfit ? ` ${arrow}` : ""}
       </Text>

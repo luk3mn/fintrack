@@ -1,16 +1,15 @@
 import { Text, View } from "react-native";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import {
-  shortInvestmentName,
-  type InvestmentSummary,
-} from "@/lib/investments";
+import { shortInvestmentName, type InvestmentSummary } from "@/lib/investments";
 import { formatBRL } from "@/lib/money";
+import { useThemeColors } from "@/theme/tokens";
 
 type Props = {
   summary: InvestmentSummary;
 };
 
 export function MaturitySection({ summary }: Props) {
+  const colors = useThemeColors();
   const maturities = summary.maturities.slice(0, 2);
 
   return (
@@ -27,11 +26,12 @@ export function MaturitySection({ summary }: Props) {
             <View
               key={maturity.id}
               className="min-h-13 flex-1 rounded-xl bg-card px-4 py-2"
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: colors.chartSeries.fixed,
+              }}
             >
-              <Text
-                numberOfLines={1}
-                className="text-xs leading-3 text-soft"
-              >
+              <Text numberOfLines={1} className="text-xs leading-3 text-soft">
                 {maturity.dateLabel} · {shortInvestmentName(maturity.name)}
               </Text>
               <Text className="pt-1 text-xs font-medium leading-4 text-foreground">

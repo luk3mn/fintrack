@@ -8,8 +8,8 @@ type Props = {
 
 export function AccountsHero({ summary }: Props) {
   return (
-    <View className="min-h-35 rounded-3xl bg-hero px-4 pb-4 pt-5">
-      <Text className="text-xs uppercase tracking-wider text-soft">
+    <View className="min-h-35 rounded-3xl bg-card px-4 pb-4 pt-5">
+      <Text className="text-xs uppercase tracking-wider text-muted">
         Total em contas
       </Text>
 
@@ -17,13 +17,13 @@ export function AccountsHero({ summary }: Props) {
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
-        className="pt-2 text-3xl font-semibold leading-9 text-hero-foreground"
+        className="pt-2 text-3xl font-semibold leading-9 text-foreground"
       >
         {formatBRL(summary.cash)}
       </Text>
 
-      <Text className="pt-3 text-xs text-soft">
-        Faturas abertas  − {formatBRL(Math.abs(summary.cardBills))}
+      <Text className="pt-3 text-xs text-warm">
+        Faturas abertas − {formatBRL(Math.abs(summary.cardBills))}
       </Text>
     </View>
   );

@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { relativeSyncLabel } from "@/lib/dates";
+import { SyncStatus } from "@/components/ui/SyncStatus";
 
 type Props = {
   lastSync?: Date;
@@ -14,11 +14,8 @@ export function OverviewHeader({ lastSync }: Props) {
         </Text>
       </View>
 
-      <View className="mt-1 flex-row justify-end">
-        <View className="mr-1 h-6 flex-row items-center rounded-xl bg-card px-3">
-          <View className="mr-1.5 h-1.5 w-1.5 rounded-full bg-warm" />
-          <Text className="text-xs text-soft">{relativeSyncLabel(lastSync)}</Text>
-        </View>
+      <View className="mt-1 flex-row justify-end px-1">
+        <SyncStatus lastSync={lastSync} />
       </View>
     </View>
   );

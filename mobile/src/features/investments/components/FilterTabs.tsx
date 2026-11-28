@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import type { InvestmentFilter } from "@/lib/investments";
+import { useThemeColors } from "@/theme/tokens";
 
 type Props = {
   value: InvestmentFilter;
@@ -14,10 +15,20 @@ const FILTERS: { key: InvestmentFilter; label: string }[] = [
 ];
 
 export function FilterTabs({ value, onChange }: Props) {
+  const colors = useThemeColors();
+
   return (
     <View className="flex-row flex-wrap gap-2 pt-3">
       {FILTERS.map((filter) => {
         const active = filter.key === value;
+        const backgroundColor =
+          filter.key === "all"
+            ? colors.primary
+            : colors.chartSeries[filter.key];
+        const textColor =
+          filter.key === "all"
+            ? colors.primaryForeground
+            : colors.chartSeriesOn;
 
         return (
           <Pressable
@@ -25,14 +36,12 @@ export function FilterTabs({ value, onChange }: Props) {
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(filter.key)}
-            className={`rounded-lg px-3 py-1 ${
-              active ? "bg-accent" : "bg-card"
-            }`}
+            className={`rounded-lg px-3 py-1 ${active ? "" : "bg-card"}`}
+            style={active ? { backgroundColor } : undefined}
           >
             <Text
-              className={`text-xs ${
-                active ? "font-medium text-primary-foreground" : "text-soft"
-              }`}
+              className={`text-xs ${active ? "font-medium" : "text-soft"}`}
+              style={active ? { color: textColor } : undefined}
             >
               {filter.label}
             </Text>

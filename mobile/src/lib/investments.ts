@@ -1,9 +1,11 @@
 import { maturityDateLabel } from "@/lib/dates";
 import { institutionKey, KNOWN_INSTITUTIONS } from "@/lib/institutions";
-import type { Cents, Investment } from "@/types/domain";
+import { normalizeText } from "@/lib/transactions";
+import type { Cents, Investment, Transaction } from "@/types/domain";
 
 export type InvestmentCategory = "fixed" | "funds" | "equity";
 export type InvestmentFilter = "all" | InvestmentCategory;
+export type InvestmentFlowCategory = InvestmentCategory | "other";
 
 export const CATEGORY_LABELS: Record<InvestmentCategory, string> = {
   fixed: "Renda fixa",
@@ -17,9 +19,115 @@ export const CATEGORY_ORDER: InvestmentCategory[] = [
   "equity",
 ];
 
-export function investmentCategory(
-  investment: Investment,
-): InvestmentCategory {
+export const INVESTMENT_FLOW_LABELS: Record<InvestmentFlowCategory, string> = {
+  ...CATEGORY_LABELS,
+  other: "Outros",
+};
+
+export const INVESTMENT_FLOW_ORDER: InvestmentFlowCategory[] = [
+  ...CATEGORY_ORDER,
+  "other",
+];
+
+/**
+ * Match whole words only. Plain `includes("acao")` misclassifies ordinary
+ * purchases because words such as "aplicacao", "fundacao" and "alienacao"
+ * contain that substring. The same applies to "lca" inside "calcados".
+ */
+const wholeWords = (words: string[]) =>
+  new RegExp(`\\b(?:${words.join("|")})\\b`);
+
+const FIXED_HINTS = [
+  "rdb",
+  "cdb",
+  "lci",
+  "lca",
+  "tesouro",
+  "poupanca",
+  "debenture",
+  "titulo",
+  "titulos",
+  "prefixado",
+  "posfixado",
+  "cdi",
+  "ipca",
+  "fixed income",
+  "renda fixa",
+];
+const FUND_HINTS = [
+  "fundo",
+  "fundos",
+  "multimercado",
+  "mutual fund",
+  "mutual funds",
+];
+const EQUITY_HINTS = [
+  "acao",
+  "acoes",
+  "etf",
+  "etfs",
+  "stock",
+  "stocks",
+  "bolsa",
+  "b3",
+];
+const GENERIC_FLOW_HINTS = [
+  "aplicacao",
+  "aplicacoes",
+  "invest",
+  "investimento",
+  "investimentos",
+  "investment",
+  "investments",
+  "resgate",
+  "resgates",
+];
+// Yield is real, but it is not money applied to the principal.
+const YIELD_HINTS = [
+  "rendimento",
+  "rendimentos",
+  "juros",
+  "dividendo",
+  "dividendos",
+  "proceeds",
+  "interest",
+];
+const REDEMPTION_HINTS = ["resgate", "resgates", "redeem", "redemption"];
+
+const FIXED = wholeWords(FIXED_HINTS);
+const FUNDS = wholeWords(FUND_HINTS);
+const EQUITY = wholeWords(EQUITY_HINTS);
+const GENERIC_FLOW = wholeWords(GENERIC_FLOW_HINTS);
+const YIELD = wholeWords(YIELD_HINTS);
+const REDEMPTION = wholeWords(REDEMPTION_HINTS);
+
+type TransactionText = Pick<Transaction, "description" | "category">;
+
+const flowText = (transaction: TransactionText) =>
+  normalizeText(
+    `${transaction.description ?? ""} ${transaction.category ?? ""}`,
+  );
+
+/** Real investment movement type inferred from the bank's own description. */
+export function investmentFlowCategory(
+  transaction: TransactionText,
+): InvestmentFlowCategory | undefined {
+  const text = flowText(transaction);
+  if (!text || YIELD.test(text)) return undefined;
+
+  // Explicit products win over the generic "aplicação"/"invest" wording.
+  if (FIXED.test(text)) return "fixed";
+  if (FUNDS.test(text)) return "funds";
+  if (EQUITY.test(text)) return "equity";
+  return GENERIC_FLOW.test(text) ? "other" : undefined;
+}
+
+/** Resgates are excluded from the accumulated-applications series. */
+export function isInvestmentRedemption(transaction: TransactionText) {
+  return REDEMPTION.test(flowText(transaction));
+}
+
+export function investmentCategory(investment: Investment): InvestmentCategory {
   switch (investment.type) {
     case "MUTUAL_FUND":
       return "funds";
@@ -30,14 +138,6 @@ export function investmentCategory(
       return "fixed";
   }
 }
-
-export type InvestmentAllocation = {
-  category: InvestmentCategory;
-  label: string;
-  balance: Cents;
-  share: number;
-  barRatio: number;
-};
 
 export function shortInvestmentName(name: string) {
   const parts = name
@@ -69,7 +169,6 @@ export type InvestmentMaturity = {
 export type InvestmentSummary = {
   total: Cents;
   profit: Cents;
-  allocations: InvestmentAllocation[];
   maturities: InvestmentMaturity[];
 };
 
@@ -134,31 +233,7 @@ export function summarizeInvestments(
   investments: Investment[],
 ): InvestmentSummary {
   const total = investments.reduce((sum, item) => sum + item.balance, 0);
-  const profit = investments.reduce(
-    (sum, item) => sum + (item.profit ?? 0),
-    0,
-  );
-
-  const balances = new Map<InvestmentCategory, Cents>(
-    CATEGORY_ORDER.map((category) => [category, 0]),
-  );
-
-  for (const investment of investments) {
-    const category = investmentCategory(investment);
-    balances.set(category, (balances.get(category) ?? 0) + investment.balance);
-  }
-
-  const largest = Math.max(...balances.values(), 0);
-  const allocations = CATEGORY_ORDER.map((category) => {
-    const balance = balances.get(category) ?? 0;
-    return {
-      category,
-      label: CATEGORY_LABELS[category],
-      balance,
-      share: total > 0 ? balance / total : 0,
-      barRatio: largest > 0 ? balance / largest : 0,
-    };
-  });
+  const profit = investments.reduce((sum, item) => sum + (item.profit ?? 0), 0);
 
   const maturities = investments
     .filter((investment) => {
@@ -181,5 +256,5 @@ export function summarizeInvestments(
       };
     });
 
-  return { total, profit, allocations, maturities };
+  return { total, profit, maturities };
 }

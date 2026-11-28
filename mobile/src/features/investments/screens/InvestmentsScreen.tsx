@@ -9,8 +9,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { useThemeColors } from "@/theme/tokens";
-import { AllocationSection } from "../components/AllocationSection";
 import { InstitutionBreakdownSheet } from "../components/InstitutionBreakdownSheet";
+import { InvestmentFlowsSection } from "../components/InvestmentFlowsSection";
 import { InvestmentsHeader } from "../components/InvestmentsHeader";
 import { InvestmentsHero } from "../components/InvestmentsHero";
 import { MaturitySection } from "../components/MaturitySection";
@@ -27,6 +27,7 @@ export function InvestmentsScreen() {
     investments,
     visibleInvestments,
     summary,
+    investmentFlows,
     filter,
     setFilter,
     lastSync,
@@ -90,7 +91,11 @@ export function InvestmentsScreen() {
             />
           </View>
 
-          <AllocationSection summary={summary} />
+          <InvestmentFlowsSection
+            flows={investmentFlows.flows}
+            keys={investmentFlows.keys}
+            isLoading={investmentFlows.isLoading}
+          />
           <MaturitySection summary={summary} />
 
           <PortfolioSection

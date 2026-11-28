@@ -5,6 +5,7 @@ import {
   summarizeInvestments,
   type InvestmentFilter,
 } from "@/lib/investments";
+import { useInvestmentFlows } from "./useInvestmentFlows";
 import { useInvestments } from "./useInvestments";
 
 const updatedAt = (value?: string) => {
@@ -15,6 +16,7 @@ const updatedAt = (value?: string) => {
 
 export function useInvestmentsScreen() {
   const investmentsQuery = useInvestments();
+  const investmentFlows = useInvestmentFlows();
   const itemsQuery = useItems();
   const [filter, setFilter] = useState<InvestmentFilter>("all");
 
@@ -26,7 +28,10 @@ export function useInvestmentsScreen() {
     [investmentsQuery.data],
   );
 
-  const summary = useMemo(() => summarizeInvestments(investments), [investments]);
+  const summary = useMemo(
+    () => summarizeInvestments(investments),
+    [investments],
+  );
 
   const visibleInvestments = useMemo(
     () =>
@@ -47,16 +52,23 @@ export function useInvestmentsScreen() {
   }, [itemsQuery.data]);
 
   const isRefetching =
-    investmentsQuery.isRefetching || itemsQuery.isRefetching;
+    investmentsQuery.isRefetching ||
+    itemsQuery.isRefetching ||
+    investmentFlows.isRefetching;
 
   const refetch = async () => {
-    await Promise.all([investmentsQuery.refetch(), itemsQuery.refetch()]);
+    await Promise.all([
+      investmentsQuery.refetch(),
+      itemsQuery.refetch(),
+      investmentFlows.refetch(),
+    ]);
   };
 
   return {
     investments,
     visibleInvestments,
     summary,
+    investmentFlows,
     filter,
     setFilter,
     lastSync,

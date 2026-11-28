@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { relativeSyncLabel } from "@/lib/dates";
+import { SyncStatus } from "@/components/ui/SyncStatus";
 import type { TransactionColors } from "../theme";
 
 type Props = {
@@ -14,20 +14,23 @@ export function TransactionsHeader({
   colors,
 }: Props) {
   return (
-    <View className="flex-row items-center justify-between">
-      <Text
-        className="text-2xl font-semibold"
-        style={{ color: colors.foreground }}
-      >
-        Transações
-      </Text>
+    <View className="flex-row items-center justify-between pt-2">
+      <View className="px-1">
+        <Text
+          className="text-2xl font-semibold"
+          style={{ color: colors.foreground }}
+        >
+          Transações
+        </Text>
+      </View>
 
-      <Text
-        className="pt-1 text-right text-xs"
-        style={{ color: colors.muted }}
-      >
-        {loading ? "Sincronizando…" : relativeSyncLabel(lastSync)}
-      </Text>
+      <View className="mt-1 flex-row justify-end px-1">
+        <SyncStatus
+          lastSync={lastSync}
+          loading={loading}
+          color={colors.muted}
+        />
+      </View>
     </View>
   );
 }

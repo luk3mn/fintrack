@@ -148,7 +148,7 @@ The final category follows a priority order: **manual override → user rules �
 - [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) for forms and validation
 - `expo-secure-store` and `expo-local-authentication` for on-device security
 - `react-native-mmkv` for persisted cache
-- `react-native-gifted-charts` for charts
+- [expo-charts](https://expokit.in/docs/charts) for charts — [Sparkline](https://expokit.in/docs/charts/sparkline), [Combo Chart](https://expokit.in/docs/charts/combo-chart), [Line Chart](https://expokit.in/docs/charts/line-chart) and [Segmented Bar](https://expokit.in/docs/charts/segmented-bar)
 
 **Backend**
 

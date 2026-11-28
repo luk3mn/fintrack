@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ComboChart, ChartProvider, type ChartConfig } from "expo-charts";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { ChartTapToggle } from "@/components/ui/ChartTapToggle";
 import { formatBRLShort, formatNetBRL } from "@/lib/money";
 import type { CashFlowPoint } from "@/lib/spending";
 import { useThemeColors } from "@/theme/tokens";
@@ -83,13 +84,15 @@ export function CashFlowChart({
     key: dataKey,
     index: defaultSelection(data, initialSelected),
   }));
+  const [tooltipIndex, setTooltipIndex] = useState<number | null>(() =>
+    defaultSelection(data, initialSelected),
+  );
 
   // Reset the selected slice when the period or its real values change.
   if (selection.key !== dataKey) {
-    setSelection({
-      key: dataKey,
-      index: defaultSelection(data, initialSelected),
-    });
+    const index = defaultSelection(data, initialSelected);
+    setSelection({ key: dataKey, index });
+    setTooltipIndex(index);
   }
 
   const selected =
@@ -119,69 +122,83 @@ export function CashFlowChart({
   };
 
   const chart = (
-    <ChartProvider
-      mode="system"
-      tokens={{
-        background: colors.background,
-        foreground: colors.foreground,
-        card: colors.card,
-        muted: colors.tile,
-        mutedForeground: colors.muted,
-        border: colors.border,
-        popover: colors.card,
-        popoverForeground: colors.foreground,
-        primary: colors.primary,
-        primaryForeground: colors.primaryForeground,
-        positive: colors.accent,
-        negative: colors.danger,
+    <ChartTapToggle
+      count={rows.length}
+      banded
+      activeIndex={tooltipIndex}
+      onIndexChange={(index) => {
+        setTooltipIndex(index);
+        if (index !== null) setSelection({ key: dataKey, index });
       }}
     >
-      <ComboChart
-        data={rows}
-        config={config}
-        keys={["income", "expenses", "balance"]}
-        xKey="label"
-        types={types}
-        height={CHART_HEIGHT}
-        radius={5}
-        curve="monotone"
-        strokeWidth={2}
-        showDots
-        showGrid
-        gridStyle="dashed"
-        showYAxis={false}
-        showLegend
-        legendMode="none"
-        legendPosition="top"
-        showTooltip={!onPress}
-        activeIndex={selected}
-        formatValue={formatBRLShort}
-        accessibilityLabel={`Entradas, saídas e saldo por ${granularity}.`}
-        onSelect={(index) => {
-          if (index === null) return;
-          if (onPress) {
-            onPress();
-            return;
-          }
-          setSelection({ key: dataKey, index });
+      <ChartProvider
+        mode="system"
+        tokens={{
+          background: colors.background,
+          foreground: colors.foreground,
+          card: colors.card,
+          muted: colors.tile,
+          mutedForeground: colors.muted,
+          border: colors.border,
+          popover: colors.card,
+          popoverForeground: colors.foreground,
+          primary: colors.primary,
+          primaryForeground: colors.primaryForeground,
+          positive: colors.accent,
+          negative: colors.danger,
         }}
-        style={{ width: "100%" }}
-      />
-    </ChartProvider>
+      >
+        <ComboChart
+          data={rows}
+          config={config}
+          keys={["income", "expenses", "balance"]}
+          xKey="label"
+          types={types}
+          height={CHART_HEIGHT}
+          radius={5}
+          curve="monotone"
+          strokeWidth={2}
+          showDots
+          showGrid
+          gridStyle="dashed"
+          showYAxis={false}
+          showLegend
+          legendMode="none"
+          legendPosition="top"
+          showTooltip
+          activeIndex={tooltipIndex}
+          formatValue={formatBRLShort}
+          accessibilityLabel={`Entradas, saídas e saldo por ${granularity}.`}
+          style={{ width: "100%" }}
+        />
+      </ChartProvider>
+    </ChartTapToggle>
   );
 
   const content = (
     <View className="rounded-3xl bg-card px-4 py-3">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-xs text-muted">
+      <View className="flex-row items-center justify-between gap-3">
+        <Text numberOfLines={1} className="flex-1 text-xs text-muted">
           Entradas, saídas e saldo por {granularity}
         </Text>
         {onPress ? (
-          <Ionicons
-            name="arrow-up-right-box-outline"
-            size={20}
-            color={colors.muted}
-          />
+          <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel="Ver detalhes do fluxo"
+            accessibilityHint="Abre a tela de gastos"
+            hitSlop={8}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            className="flex-row items-center gap-1"
+          >
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: colors.primary }}
+            >
+              Ver detalhes
+            </Text>
+            <Ionicons name="chevron-forward" size={12} color={colors.primary} />
+          </Pressable>
         ) : null}
       </View>
 
@@ -214,21 +231,6 @@ export function CashFlowChart({
       </View>
     </View>
   );
-
-  if (onPress) {
-    return (
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel="Ver fluxo do mês"
-        accessibilityHint="Abre a tela de gastos"
-        style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-        className="rounded-3xl"
-      >
-        {content}
-      </Pressable>
-    );
-  }
 
   return content;
 }
